@@ -1,15 +1,6 @@
-import datetime as dt
-
 import pytest
 from sqlalchemy import create_engine
 from testcontainers.postgres import PostgresContainer
-
-now = dt.datetime.now()
-
-
-@pytest.fixture
-def datetime_now():
-    return now
 
 
 @pytest.fixture
