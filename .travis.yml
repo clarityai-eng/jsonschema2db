@@ -1,5 +1,6 @@
 language: python
 python: "3.7"
+os: linux
 dist: xenial
 
 services:
@@ -8,8 +9,7 @@ services:
 stages:
   - lint
   - test
-  - name: deploy
-    if: tag IS present
+  - deploy
 
 cache:
   pip: true
@@ -32,13 +32,11 @@ jobs:
         - make test
     - stage: deploy
       script:
-        - echo Deploying to PyPI...
+        - echo "Deploying to PyPI..."
 
 deploy:
   - provider: script
-    script: |
-      poetry version $(git describe --tags --abbrev=0)
-      poetry publish --username $PYPI_PASS --password $PYPI_PASS --build
+    script: poetry version $(git describe --tags --abbrev=0) && poetry publish --username $PYPI_USER --password $PYPI_PASS --build
     on:
       repo: clarityai-eng/jsonschema2ddl
       branch: master
