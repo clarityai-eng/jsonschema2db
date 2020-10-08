@@ -1,6 +1,8 @@
 import datetime
 import json
 
+from sqlalchemy.sql import text
+
 from jsonschema2ddl import JSONSchemaToPostgres
 
 
@@ -10,89 +12,85 @@ def query(con, q):
     return cur.fetchall()
 
 
-def test_lff(db):
+def test_flat_schema(db):
     connection = db["connection"]
-    schema = json.load(open('test/test_schema.json'))
+    schema = json.load(open('test/test_schema_flat.json'))
     translator = JSONSchemaToPostgres(
         schema,
         postgres_schema='schm',
-        item_col_name='loan_file_id',
-        item_col_type='string',
-        abbreviations={
-            'AbbreviateThisReallyLongColumn': 'AbbTRLC',
-        },
+        root_table='my_table',
+        id_cols=["UserId"],
         debug=True,
     )
 
-    translator.create_tables(connection)
-    translator.insert_items(connection, [
-        ('loan_file_abc123', {
-            'Loan': {'Amount': 500000},
-            'SubjectProperty': {'Address': {'City': 'New York', 'ZipCode': '12345', 'Latitude': 43}, 'Acreage': 42},
-            'RealEstateOwned': {'1': {'Address': {'City': 'Brooklyn', 'ZipCode': '65432'}, 'RentalIncome': 1000},
-                                '2': {'Address': {'City': 'Queens', 'ZipCode': '54321'}}},
-        })
-    ])
-    translator.create_links(connection)
+    translator.create_tables(connection, auto_commit=True)
+    # FIXME: Create Links for subtables
+    # translator.create_links(connection)
     translator.analyze(connection)
 
-    assert list(query(connection, 'select count(1) from schm.root')) == [(1,)]
-    assert list(query(connection, 'select count(1) from schm.basic_address')) == [(3,)]
-    assert list(query(connection, 'select loan_file_id, prefix, loan__amount, subject_property__acreage, subject_property__address__latitude, loan__abb_trlc from schm.root')) == \
-        [('loan_file_abc123', '', 500000, 42.0, 43.0, None)]
-    assert set(query(connection, 'select loan_file_id, prefix, city, zip_code from schm.basic_address')) == \
-        set([('loan_file_abc123', '/SubjectProperty/Address', 'New York', '12345'),
-             ('loan_file_abc123', '/RealEstateOwned/1/Address', 'Brooklyn', '65432'),
-             ('loan_file_abc123', '/RealEstateOwned/2/Address', 'Queens', '54321')])
-    assert set(query(connection, 'select loan_file_id, prefix, rental_income from schm.real_estate_owned')) == \
-        set([('loan_file_abc123', '/RealEstateOwned/1', 1000),
-             ('loan_file_abc123', '/RealEstateOwned/2', None)])
-    assert set(query(connection, 'select subject_property__address_id from schm.root union select address_id from schm.real_estate_owned')) == \
-        set(query(connection, 'select id from schm.basic_address'))
-    assert set(query(connection, 'select root_id from schm.real_estate_owned')) == \
-        set(query(connection, 'select id from schm.root'))
+    with db['engine'].connect() as conn:
+        data = (
+            {"user_id": 1, "user_name": "john", "age": 20, "address": "USA"},
+            {"user_id": 2, "user_name": "doe", "age": 21, "address": "USA"}
+        )
+        statement = text("""
+            INSERT INTO "schm"."my_table" (user_id, user_name, age, address)
+                VALUES(:user_id, :user_name, :age, :address)""")
+        for line in data:
+            conn.execute(statement, **line)
+
+        result = conn.execute('SELECT * FROM "schm"."my_table"')
+        rows = [row for row in result]
+        assert len(rows) == 2
 
 
-def test_pp_to_def(db):
+def test_extra_columns(db):
     connection = db["connection"]
-    schema = json.load(open('test/test_pp_to_def.json'))
-    translator = JSONSchemaToPostgres(schema, debug=True)
-    translator.create_tables(connection)
-    translator.insert_items(connection,
-                            [(33, [(('aBunchOfDocuments', 'xyz', 'url'), 'http://baz.bar'),
-                                   (('moreDocuments', 'abc', 'url'), 'https://banana'),
-                                   (('moreDocuments', 'abc', 'url'), ['wrong-type']),
-                                   (('moreDocuments', 'abc'), 'broken-value-ignore')])],
-                            count=True)
-    translator.create_links(connection)
+    schema = json.load(open('test/test_schema_flat.json'))
+    translator = JSONSchemaToPostgres(
+        schema,
+        postgres_schema='schm',
+        root_table='my_table',
+        id_cols=["UserId"],
+        extra_columns=[('points', 'integer')],
+        debug=True,
+    )
+
+    translator.create_tables(connection, auto_commit=True)
+    # FIXME: Create Links for subtables
+    # translator.create_links(connection)
     translator.analyze(connection)
 
-    assert translator.failure_count == {('moreDocuments', 'abc'): 1, ('moreDocuments', 'abc', 'url'): 1}
+    with db['engine'].connect() as conn:
+        data = (
+            {"user_id": 1, "user_name": "john", "age": 20, "address": "USA", "points": 100},
+            {"user_id": 2, "user_name": "doe", "age": 21, "address": "USA", "points": 100}
+        )
+        statement = text("""
+            INSERT INTO "schm"."my_table" (user_id, user_name, age, address, points)
+                VALUES(:user_id, :user_name, :age, :address, :points)""")
+        for line in data:
+            conn.execute(statement, **line)
 
-    assert list(query(connection, 'select count(1) from root')) == [(1,)]
-    assert list(query(connection, 'select count(1) from file')) == [(2,)]
-
-    assert list(query(connection, 'select id, prefix, item_id from root')) == [(1, '', 33)]
-    assert list(query(connection, 'select id, prefix, item_id, root_id from a_bunch_of_documents')) == \
-        [(1, '/aBunchOfDocuments/xyz', 33, 1)]
-    assert set(query(connection, 'select prefix, url, item_id from file')) == \
-        set([
-            ('/aBunchOfDocuments/xyz', 'http://baz.bar', 33),
-            ('/moreDocuments/abc', 'https://banana', 33)])
-    assert set(list(query(connection, 'select file_id from a_bunch_of_documents'))
-               + list(query(connection, 'select file_id from more_documents'))) == set([(1,), (2,)])
+        result = conn.execute('SELECT * FROM "schm"."my_table"')
+        rows = [row for row in result]
+        assert len(rows) == 2
 
 
 def test_comments():
-    schema = json.load(open('test/test_pp_to_def.json'))
+    schema = json.load(open('test/test_schema.json'))
     translator = JSONSchemaToPostgres(schema, debug=True)
 
     # A bit ugly to look at private members, but pulling comments out of postgres is a pain
     assert translator._table_comments == {
         'root': 'the root of everything',
-        'file': 'this is a file',
-        'a_bunch_of_documents': 'this is a bunch of documents'}
-    assert translator._column_comments == {'file': {'url': 'the url of the file'}}
+        'basic_address': 'This is an address',
+    }
+    assert translator._column_comments == {
+        'basic_address': {
+            'city': 'This is a city'
+        }
+    }
 
 
 def test_time_types(db):
@@ -100,16 +98,23 @@ def test_time_types(db):
     schema = json.load(open('test/test_time_schema.json'))
     translator = JSONSchemaToPostgres(schema, debug=True)
 
-    translator.create_tables(connection)
-    translator.insert_items(connection, [
-        (1, {'ts': datetime.datetime(2018, 2, 3, 12, 45, 56), 'd': datetime.date(2018, 7, 8)}),
-        (2, {'ts': '2017-02-03T01:23:45Z', 'd': '2013-03-02'}),
-    ])
+    translator.create_tables(connection, auto_commit=True)
+    with db['engine'].connect() as conn:
+        data = (
+            {'ts': datetime.datetime(2018, 2, 3, 12, 45, 56), 'd': datetime.date(2018, 7, 8)},
+            {'ts': '2017-02-03T01:23:45Z', 'd': '2013-03-02'},
+        )
+        statement = text("""INSERT INTO root (ts, d) VALUES(:ts, :d)""")
+        for line in data:
+            conn.execute(statement, **line)
 
-    assert list(query(connection, 'select id, d from root')) == \
-        [(1, datetime.date(2018, 7, 8)), (2, datetime.date(2013, 3, 2))]
-    assert list((id, ts.isoformat()) for id, ts in query(connection, 'select id, ts from root')) == \
-        [(1, '2018-02-03T12:45:56+00:00'), (2, '2017-02-03T01:23:45+00:00')]
+        result = conn.execute('SELECT ts, d FROM root')
+        rows = [(ts.strftime("%Y-%m-%dT%H:%M:%SZ"), d.strftime("%Y-%m-%dT%H:%M:%SZ")) for ts, d in result]
+        assert len(rows) == 2
+        assert rows == [
+            (datetime.datetime(2018, 2, 3, 12, 45, 56).strftime("%Y-%m-%dT%H:%M:%SZ"), datetime.date(2018, 7, 8).strftime("%Y-%m-%dT%H:%M:%SZ")),
+            (datetime.datetime(2017, 2, 3, 1, 23, 45).strftime("%Y-%m-%dT%H:%M:%SZ"), datetime.date(2013, 3, 2).strftime("%Y-%m-%dT%H:%M:%SZ"))
+        ]
 
 
 def test_refs(db):
@@ -119,33 +124,3 @@ def test_refs(db):
 
     translator.create_tables(connection)
     assert list(query(connection, 'select col from c')) == []  # Just make sure table exists
-
-
-def test_extra_columns(db):
-    connection = db["connection"]
-    schema = json.load(open('test/test_schema.json'))
-    translator = JSONSchemaToPostgres(
-        schema,
-        postgres_schema='schm',
-        item_col_name='loan_file_id',
-        item_col_type='string',
-        abbreviations={
-            'AbbreviateThisReallyLongColumn': 'AbbTRLC',
-        },
-        debug=True,
-        extra_columns=[('loan_period', 'integer')]
-    )
-
-    translator.create_tables(connection)
-    translator.insert_items(connection, [
-        ('loan_file_abc123', {
-            'Loan': {'Amount': 500000},
-            'SubjectProperty': {'Address': {'City': 'New York', 'ZipCode': '12345', 'Latitude': 43}, 'Acreage': 42},
-            'RealEstateOwned': {'1': {'Address': {'City': 'Brooklyn', 'ZipCode': '65432'}, 'RentalIncome': 1000},
-                                '2': {'Address': {'City': 'Queens', 'ZipCode': '54321'}}},
-        })
-    ], {'loan_file_abc123': {'loan_period': 30}})
-    translator.create_links(connection)
-    translator.analyze(connection)
-
-    assert list(query(connection, 'select loan_period from schm.root')) == [(30,)]

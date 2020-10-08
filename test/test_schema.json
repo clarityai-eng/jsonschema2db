@@ -1,7 +1,44 @@
 {
     "$schema": "http://json-schema.org/schema#",
-    "title": "Fact schema",
+    "title": "Example schema",
     "type": "object",
+    "comment": "the root of everything",
+    "properties": {
+        "LoanId": {
+            "type": "string"
+        },
+        "Loan": {
+            "type": "object",
+            "description": "Loan information",
+            "properties": {
+                "Amount": {
+                    "type": "number"
+                },
+                "SomeSuperLongColumnNameThatDoesntFitInPostgresUnfortunately": {
+                    "type": "number"
+                },
+                "AbbreviateThisReallyLongColumn": {
+                    "type": "number"
+                }
+            }
+        },
+        "RealEstateOwned": {
+            "type": "object",
+            "patternProperties": {
+                "[0-9]+": {
+                    "type": "object",
+                    "properties": {
+                        "Address": {
+                            "$ref": "#/definitions/basicAddress"
+                        },
+                        "RentalIncome": {
+                            "type": "number"
+                        }
+                    }
+                }
+            }
+        }
+    },
     "definitions": {
         "basicAddress": {
             "type": "object",
@@ -21,76 +58,6 @@
                 },
                 "ZipCode": {
                     "type": "string"
-                }
-            }
-        },
-        "address": {
-            "allOf": [
-                {
-                    "$ref": "#/definitions/basicAddress"
-                },
-                {
-                    "type": "object",
-                    "properties": {
-                        "Latitude": {
-                            "type": "number",
-                            "minimum": -90,
-                            "maximum": 90
-                        },
-                        "Longitude": {
-                            "type": "number",
-                            "minimum": -180,
-                            "maximum": 180
-                        }
-                    }
-                }
-            ]
-        },
-        "unum": {
-            "type": "number",
-            "minimum": 0
-        }
-    },
-    "properties": {
-        "Loan": {
-            "type": "object",
-            "description": "Loan information",
-            "properties": {
-                "Amount": {
-                    "type": "number"
-                },
-                "SomeSuperLongColumnNameThatDoesntFitInPostgresUnfortunately": {
-                    "type": "number"
-                },
-                "AbbreviateThisReallyLongColumn": {
-                    "type": "number"
-                }
-            }
-        },
-        "SubjectProperty": {
-            "type": "object",
-            "properties": {
-                "Acreage": {
-                    "$ref": "#/definitions/unum"
-                },
-                "Address": {
-                    "$ref": "#/definitions/address"
-                }
-            }
-        },
-        "RealEstateOwned": {
-            "type": "object",
-            "patternProperties": {
-                "[0-9]+": {
-                    "type": "object",
-                    "properties": {
-                        "Address": {
-                            "$ref": "#/definitions/basicAddress"
-                        },
-                        "RentalIncome": {
-                            "type": "number"
-                        }
-                    }
                 }
             }
         }
