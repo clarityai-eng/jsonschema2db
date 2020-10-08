@@ -15,6 +15,7 @@ In this first we don't include major changes
 ### Added
 
 - Don't drop the schema when creating the tables by default
+- Provide options to select whether to drop the tables if exists and with cascade or not.
 - Provide an option to autocomit the changes in the schema creation
 
 ### Changed

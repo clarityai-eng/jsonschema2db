@@ -1,8 +1,6 @@
 import datetime
 import json
 
-import psycopg2
-
 from jsonschema2ddl import JSONSchemaToPostgres
 
 
@@ -12,7 +10,8 @@ def query(con, q):
     return cur.fetchall()
 
 
-def test_lff(connection):
+def test_lff(db):
+    connection = db["connection"]
     schema = json.load(open('test/test_schema.json'))
     translator = JSONSchemaToPostgres(
         schema,
@@ -54,7 +53,8 @@ def test_lff(connection):
         set(query(connection, 'select id from schm.root'))
 
 
-def test_pp_to_def(connection):
+def test_pp_to_def(db):
+    connection = db["connection"]
     schema = json.load(open('test/test_pp_to_def.json'))
     translator = JSONSchemaToPostgres(schema, debug=True)
     translator.create_tables(connection)
@@ -95,7 +95,8 @@ def test_comments():
     assert translator._column_comments == {'file': {'url': 'the url of the file'}}
 
 
-def test_time_types(connection):
+def test_time_types(db):
+    connection = db["connection"]
     schema = json.load(open('test/test_time_schema.json'))
     translator = JSONSchemaToPostgres(schema, debug=True)
 
@@ -111,7 +112,8 @@ def test_time_types(connection):
         [(1, '2018-02-03T12:45:56+00:00'), (2, '2017-02-03T01:23:45+00:00')]
 
 
-def test_refs(connection):
+def test_refs(db):
+    connection = db["connection"]
     schema = json.load(open('test/test_refs.json'))
     translator = JSONSchemaToPostgres(schema, debug=True)
 
@@ -119,7 +121,8 @@ def test_refs(connection):
     assert list(query(connection, 'select col from c')) == []  # Just make sure table exists
 
 
-def test_extra_columns(connection):
+def test_extra_columns(db):
+    connection = db["connection"]
     schema = json.load(open('test/test_schema.json'))
     translator = JSONSchemaToPostgres(
         schema,

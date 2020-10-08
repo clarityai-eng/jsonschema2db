@@ -1,6 +1,5 @@
 import datetime as dt
 
-import psycopg2
 import pytest
 from sqlalchemy import create_engine
 from testcontainers.postgres import PostgresContainer
@@ -14,8 +13,12 @@ def datetime_now():
 
 
 @pytest.fixture
-def connection(scope="session"):
+def db(scope="session"):
     with PostgresContainer("postgres:11.4") as postgres:
-        # yield psycopg2.connect(postgres.get_connection_url())
         engine = create_engine(postgres.get_connection_url())
-        yield engine.raw_connection()
+        connection = engine.raw_connection()
+        yield {
+            "connection": connection,
+            "engine": engine,
+        }
+        connection.close()

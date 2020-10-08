@@ -130,9 +130,9 @@ class JSONSchemaToDatabase:
     def _column_name(self, path):
         return self._table_name(path)  # same
 
-    def _execute(self, cursor, query, args=None, query_ok_to_print=True):
+    def _execute(self, cursor, query, args=None, query_ok_to_print=True, dst=sys.stderr):
         if self._debug and query_ok_to_print:
-            print(query, file=sys.stderr)
+            print(query, file=dst)
         cursor.execute(query, args)
 
     def _traverse(
@@ -300,7 +300,13 @@ class JSONSchemaToDatabase:
         else:
             return '"%s"."%s"' % (self._postgres_schema, table)
 
-    def create_tables(self, conn, drop_schema: bool = False, auto_commit: bool = False):
+    def create_tables(
+            self,
+            conn,
+            drop_schema: bool = False,
+            drop_tables: bool = False,
+            drop_cascade: bool = True,
+            auto_commit: bool = False):
         """Creates tables
 
         Args:
@@ -309,13 +315,22 @@ class JSONSchemaToDatabase:
         with conn.cursor() as cursor:
             if self._postgres_schema is not None:
                 if drop_schema:
-                    self._execute(cursor, 'DROP SCHEMA IF EXISTS %s CASCADE' % self._postgres_schema)
-                self._execute(cursor, 'CREATE SCHEMA IF NOT EXISTS %s' % self._postgres_schema)
+                    self._execute(
+                        cursor,
+                        f'DROP SCHEMA IF EXISTS {self._postgres_schema} {"CASCADE;" if drop_cascade else ";"}'
+                    )
+                self._execute(cursor, f'CREATE SCHEMA IF NOT EXISTS {self._postgres_schema};')
             for table, columns in self._table_columns.items():
                 types = [self._table_definitions[table][column] for column in columns]
                 id_data_type = ID_TYPES[self._database_flavor]
+                table_name = self._postgres_table_name(table)
+                if drop_tables:
+                    self._execute(
+                        cursor,
+                        f'DROP TABLE IF EXISTS {table_name} {"CASCADE;" if drop_cascade else ";"}'
+                    )
                 create_q = 'CREATE TABLE %s (id %s, "%s" %s not null, "%s" text not null, %s unique ("%s", "%s"), unique (id));' % (
-                    self._postgres_table_name(table),
+                    table_name,
                     id_data_type,
                     self._item_col_name,
                     POSTGRESQ_TYPES[self._item_col_type],
@@ -325,10 +340,10 @@ class JSONSchemaToDatabase:
                 )
                 self._execute(cursor, create_q)
                 if table in self._table_comments:
-                    self._execute(cursor, 'comment on table %s is %%s' % self._postgres_table_name(table), (self._table_comments[table],))
+                    self._execute(cursor, 'comment on table %s is %%s' % table_name, (self._table_comments[table],))
                 for c in columns:
                     if c in self._column_comments.get(table, {}):
-                        self._execute(cursor, 'comment on column %s."%s" is %%s' % (self._postgres_table_name(table), c), (self._column_comments[table][c],))
+                        self._execute(cursor, 'comment on column %s."%s" is %%s' % (table_name, c), (self._column_comments[table][c],))
         if auto_commit:
             conn.commit()
 
