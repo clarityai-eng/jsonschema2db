@@ -7,7 +7,6 @@ services:
   - docker
 
 stages:
-  - lint
   - test
   - deploy
 
@@ -30,9 +29,6 @@ jobs:
         - poetry install -v
       script:
         - make test
-    - stage: deploy
-      script:
-        - echo "Deploying to PyPI..."
 
 deploy:
   - provider: script
