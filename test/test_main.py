@@ -1,9 +1,9 @@
 import datetime
-import json
 
+import pytest
 from sqlalchemy.sql import text
 
-from jsonschema2ddl import JSONSchemaToPostgres
+from jsonschema2ddl import JSONSchemaToDatabase
 
 
 def query(con, q):
@@ -12,20 +12,16 @@ def query(con, q):
     return cur.fetchall()
 
 
-def test_flat_schema(db):
+def test_flat_schema(db, schema_flat):
     connection = db["connection"]
-    schema = json.load(open('test/test_schema_flat.json'))
-    translator = JSONSchemaToPostgres(
-        schema,
-        postgres_schema='schm',
-        root_table='my_table',
-        id_cols=["UserId"],
-        debug=True,
+    translator = JSONSchemaToDatabase(
+        schema_flat,
+        schema_name='schm',
+        root_table_name='my_table',
     )
 
     translator.create_tables(connection, auto_commit=True)
-    # FIXME: Create Links for subtables
-    # translator.create_links(connection)
+    translator.create_links(connection)
     translator.analyze(connection)
 
     with db['engine'].connect() as conn:
@@ -44,20 +40,69 @@ def test_flat_schema(db):
         assert len(rows) == 2
 
 
-def test_extra_columns(db):
+def test_schema(db, schema):
     connection = db["connection"]
-    schema = json.load(open('test/test_schema_flat.json'))
-    translator = JSONSchemaToPostgres(
+    translator = JSONSchemaToDatabase(
         schema,
-        postgres_schema='schm',
-        root_table='my_table',
-        id_cols=["UserId"],
-        extra_columns=[('points', 'integer')],
-        debug=True,
+        schema_name='schm',
+        root_table_name='my_table',
     )
 
     translator.create_tables(connection, auto_commit=True)
-    # FIXME: Create Links for subtables
+    translator.create_links(connection)
+    translator.analyze(connection)
+
+    with db['engine'].connect() as conn:
+        data = (
+            {"street_address": "street1", "city": "LA", "state": "CA"},
+            {"street_address": "street2", "city": "SF", "state": "CA"}
+        )
+        statement = text("""
+            INSERT INTO "schm"."address" (street_address, city, state)
+                VALUES(:street_address, :city, :state)""")
+        for line in data:
+            conn.execute(statement, **line)
+
+        result = conn.execute('SELECT * FROM "schm"."address"')
+        rows = [row for row in result]
+        print(rows)
+        assert len(rows) == 2
+
+        data = (
+            {"user_id": 1, "user_name": "john", "age": 20, "address": 1},
+            {"user_id": 2, "user_name": "doe", "age": 21, "address": 2}
+        )
+        statement = text("""
+            INSERT INTO "schm"."my_table" (user_id, user_name, age, address)
+                VALUES(:user_id, :user_name, :age, :address)""")
+        for line in data:
+            conn.execute(statement, **line)
+
+        result = conn.execute('SELECT * FROM "schm"."my_table"')
+        rows = [row for row in result]
+
+        assert len(rows) == 2
+        bad_data = {"user_id": 3, "user_name": "doe", "age": 21, "address": 1000}
+        with pytest.raises(Exception):
+            conn.execute(statement, **bad_data)
+
+        result = conn.execute('SELECT * FROM "schm"."my_table"')
+        rows = [row for row in result]
+
+        assert len(rows) == 2
+
+
+@pytest.mark.skip(reason="Current implementation doesn't support extra columns")
+def test_extra_columns(db, schema_flat):
+    connection = db["connection"]
+    translator = JSONSchemaToDatabase(
+        schema_flat,
+        schema_name='schm',
+        root_table_name='my_table',
+        extra_columns=[('points', 'integer')],
+    )
+
+    translator.create_tables(connection, auto_commit=True)
     # translator.create_links(connection)
     translator.analyze(connection)
 
@@ -77,28 +122,32 @@ def test_extra_columns(db):
         assert len(rows) == 2
 
 
-def test_comments():
-    schema = json.load(open('test/test_schema.json'))
-    translator = JSONSchemaToPostgres(schema, debug=True)
+def test_comments(schema_long_names):
+    translator = JSONSchemaToDatabase(schema_long_names)
 
     # A bit ugly to look at private members, but pulling comments out of postgres is a pain
-    assert translator._table_comments == {
+    table_comments = {
         'root': 'the root of everything',
         'basic_address': 'This is an address',
     }
-    assert translator._column_comments == {
+    column_comments = {
         'basic_address': {
             'city': 'This is a city'
         }
     }
+    assert translator.table_definitions['root'].comment == table_comments['root']
+    assert translator.table_definitions['#/definitions/basicAddress'].comment == table_comments['basic_address']
+    columns = translator.table_definitions['#/definitions/basicAddress'].columns
+    column_comments = {c.name: c.comment for c in columns if c.comment != ''}
+    assert column_comments == column_comments
 
 
-def test_time_types(db):
+def test_time_types(db, schema_time):
     connection = db["connection"]
-    schema = json.load(open('test/test_time_schema.json'))
-    translator = JSONSchemaToPostgres(schema, debug=True)
+    translator = JSONSchemaToDatabase(schema_time)
 
     translator.create_tables(connection, auto_commit=True)
+    print(translator.table_definitions)
     with db['engine'].connect() as conn:
         data = (
             {'ts': datetime.datetime(2018, 2, 3, 12, 45, 56), 'd': datetime.date(2018, 7, 8)},
@@ -117,10 +166,10 @@ def test_time_types(db):
         ]
 
 
-def test_refs(db):
+@pytest.mark.skip(reason="Current implementation doesn't support nested refs")
+def test_refs(db, schema_refs):
     connection = db["connection"]
-    schema = json.load(open('test/test_refs.json'))
-    translator = JSONSchemaToPostgres(schema, debug=True)
+    translator = JSONSchemaToDatabase(schema_refs)
 
     translator.create_tables(connection)
     assert list(query(connection, 'select col from c')) == []  # Just make sure table exists

@@ -1,0 +1,65 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "title": "Example schema",
+    "type": "object",
+    "comment": "the root of everything",
+    "properties": {
+        "LoanId": {
+            "type": "string"
+        },
+        "Loan": {
+            "type": "object",
+            "description": "Loan information",
+            "properties": {
+                "Amount": {
+                    "type": "number"
+                },
+                "SomeSuperLongColumnNameThatDoesntFitInPostgresUnfortunately": {
+                    "type": "number"
+                },
+                "AbbreviateThisReallyLongColumn": {
+                    "type": "number"
+                }
+            }
+        },
+        "RealEstateOwned": {
+            "type": "object",
+            "patternProperties": {
+                "[0-9]+": {
+                    "type": "object",
+                    "properties": {
+                        "Address": {
+                            "$ref": "#/definitions/basicAddress"
+                        },
+                        "RentalIncome": {
+                            "type": "number"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "basicAddress": {
+            "type": "object",
+            "comment": "This is an address",
+            "properties": {
+                "City": {
+                    "type": "string",
+                    "comment": "This is a city"
+                },
+                "State": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 2
+                },
+                "Street": {
+                    "type": "string"
+                },
+                "ZipCode": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

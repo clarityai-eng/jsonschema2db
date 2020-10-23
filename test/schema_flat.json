@@ -1,0 +1,25 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "title": "Example schema",
+    "type": "object",
+    "comment": "the root of everything",
+    "properties": {
+        "UserId": {
+            "type": "integer",
+            "pk": true
+        },
+        "UserName": {
+            "type": "string"
+        },
+        "Sex": {
+            "type": "string"
+        },
+        "Age": {
+            "type": "integer"
+        },
+        "Address": {
+            "type": "string"
+        }
+    },
+    "index": []
+}

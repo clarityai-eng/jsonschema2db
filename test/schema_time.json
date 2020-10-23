@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "type": "object",
+    "definitions": {
+        "date": {
+            "type": "string",
+            "format": "date"
+        }
+    },
+    "properties": {
+        "ts": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "d": {
+            "$ref": "#/definitions/date"
+        }
+    }
+}
