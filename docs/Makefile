@@ -6,7 +6,7 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BASEDIR       = docs
-BUILDDIR      = _build
+BUILDDIR      = .
 AUTODOCDIR    = api
 AUTODOCBUILD  = sphinx-apidoc
 PROJECT       = jsonschema2ddl
@@ -52,7 +52,8 @@ help:
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 
 clean:
-	rm -rf $(BUILDDIR)/*
+	rm -rf $(BUILDDIR)/html
+	rm -rf $(BUILDDIR)/doctrees
 
 $(AUTODOCDIR): $(MODULEDIR)
 	mkdir -p $@
