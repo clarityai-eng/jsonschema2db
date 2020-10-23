@@ -413,7 +413,7 @@ wcwidth = "*"
 name = "psycopg2"
 version = "2.8.6"
 description = "psycopg2 - Python-PostgreSQL Database Adapter"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
 
@@ -817,7 +817,7 @@ testing = ["pytest (>=3.5,<3.7.3 || >3.7.3)", "pytest-checkdocs (>=1.2.3)", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "4feb0b804153d39392b53358cb2d9f802d45afe6a9dededf6c853c2c47f9da76"
+content-hash = "eb1c943adf0fe1f99f515d33631c59f64fede27e45edae9cca0ca77166aec74d"
 
 [metadata.files]
 alabaster = [
