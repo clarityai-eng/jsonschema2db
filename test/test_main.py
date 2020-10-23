@@ -22,7 +22,7 @@ def test_flat_schema(db, schema_flat):
 
     translator.create_tables(connection, auto_commit=True)
     # FIXME: Create Links for subtables
-    # translator.create_links(connection)
+    translator.create_links(connection)
     translator.analyze(connection)
 
     with db['engine'].connect() as conn:
@@ -51,13 +51,28 @@ def test_schema(db, schema):
 
     translator.create_tables(connection, auto_commit=True)
     # FIXME: Create Links for subtables
-    # translator.create_links(connection)
+    translator.create_links(connection)
     translator.analyze(connection)
 
     with db['engine'].connect() as conn:
         data = (
-            {"user_id": 1, "user_name": "john", "age": 20, "address": "USA"},
-            {"user_id": 2, "user_name": "doe", "age": 21, "address": "USA"}
+            {"street_address": "street1", "city": "LA", "state": "CA"},
+            {"street_address": "street2", "city": "SF", "state": "CA"}
+        )
+        statement = text("""
+            INSERT INTO "schm"."address" (street_address, city, state)
+                VALUES(:street_address, :city, :state)""")
+        for line in data:
+            conn.execute(statement, **line)
+
+        result = conn.execute('SELECT * FROM "schm"."address"')
+        rows = [row for row in result]
+        print(rows)
+        assert len(rows) == 2
+
+        data = (
+            {"user_id": 1, "user_name": "john", "age": 20, "address": 1},
+            {"user_id": 2, "user_name": "doe", "age": 21, "address": 2}
         )
         statement = text("""
             INSERT INTO "schm"."my_table" (user_id, user_name, age, address)
@@ -67,6 +82,15 @@ def test_schema(db, schema):
 
         result = conn.execute('SELECT * FROM "schm"."my_table"')
         rows = [row for row in result]
+
+        assert len(rows) == 2
+        bad_data = {"user_id": 3, "user_name": "doe", "age": 21, "address": 1000}
+        with pytest.raises(Exception):
+            conn.execute(statement, **bad_data)
+
+        result = conn.execute('SELECT * FROM "schm"."my_table"')
+        rows = [row for row in result]
+
         assert len(rows) == 2
 
 

@@ -2,7 +2,7 @@ import logging
 from dataclasses import asdict, dataclass, field
 from typing import Dict, List, Set
 
-from jsonschema2ddl.types import COLUMNS_TYPES
+from jsonschema2ddl.types import COLUMNS_TYPES, FK_TYPES
 from jsonschema2ddl.utils import db_column_name
 
 
@@ -45,6 +45,15 @@ class Column:
     @property
     def is_unique(self) -> bool:
         return self.jsonschema_fields.get('unique', False)
+
+    @staticmethod
+    def is_fk() -> bool:
+        """Returns true if the column is a foreign key.
+
+        Returns:
+            bool: True if it is foreign key
+        """
+        return False
 
     def __hash__(self):
         return hash(self.name)
@@ -125,7 +134,7 @@ class Table:
             col = Column(
                 name='id',
                 database_flavor=self.database_flavor,
-                jsonschema_type=col_object['type'],
+                jsonschema_type='id',
             )
             self.columns.add(col)
             self.primary_key = col
@@ -140,7 +149,21 @@ class FKColumn(Column):
     @property
     def data_type(self) -> str:
         data_type_ref = self.table_ref.primary_key.data_type
-        if data_type_ref == "serial":
-            return "integer"
-        else:
+        if "varchar" in data_type_ref:
             return data_type_ref
+        else:
+            return FK_TYPES.get(data_type_ref, 'bigint')
+
+    @staticmethod
+    def is_fk() -> bool:
+        """Returns true if the column is a foreign key.
+
+        Returns:
+            bool: True if it is foreign key
+        """
+        return True
+
+    # FIXME: Avoid overwritting the the repr method
+    # NOTE: Overwrite dataclass method to show data_type property
+    def __repr__(self):
+        return f"FKColumn(name={self.name} data_type={self.data_type} table_ref.name={self.table_ref.name})"

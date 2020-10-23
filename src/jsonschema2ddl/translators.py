@@ -131,11 +131,12 @@ class JSONSchemaToDatabase:
                     )
                 all_cols = [f' "{col.name}" {col.data_type}' for col in table.columns]
                 unique_cols = [f'"{col}"' for col in table.columns if col.is_unique]
-                create_q = f"""CREATE TABLE {table.name} (
-                        {','.join(all_cols)}
-                        {", UNIQUE (" + ','.join(unique_cols) +  ")" if len(unique_cols) > 0 else ""}
-                        {", PRIMARY KEY (" + table.primary_key.name +  ")" if table.primary_key else ""});
-                    """
+                create_q = (
+                    f"""CREATE TABLE {table.name} ( """
+                    f"""{','.join(all_cols)} """
+                    f"""{", UNIQUE (" + ','.join(unique_cols) +  ")" if len(unique_cols) > 0 else ""} """
+                    f"""{", PRIMARY KEY (" + table.primary_key.name +  ")" if table.primary_key else ""}); """
+                )
                 self._execute(cursor, create_q)
                 if table.comment:
                     self.logger.debug(f'Set the following comment on table {table.name}: {table.comment}')
@@ -149,11 +150,46 @@ class JSONSchemaToDatabase:
         if auto_commit:
             conn.commit()
 
-    def create_links(self, conn):
-        pass
+    def create_links(self, conn, auto_commit: bool = True):
+
+        """Adds foreign keys between tables.
+
+        Args:
+            conn (): connection object
+            auto_commit (bool, Optional): Defaults to False
+        """
+        for table_ref, table in self.table_definitions.items():
+            print(table_ref)
+            print(table)
+            for col in table.columns:
+                print(col)
+                if col.is_fk():
+                    fk_q = (
+                        f"""ALTER TABLE {table.name} """
+                        f"""ADD CONSTRAINT fk_{col.table_ref.name.split('"')[-2]} """  # FIXME: Formatting hack
+                        f"""FOREIGN KEY ({col.name}) """
+                        f"""REFERENCES {col.table_ref.name} ({col.table_ref.primary_key.name}); """
+                    )
+                    with conn.cursor() as cursor:
+                        self._execute(cursor, fk_q)
+                    if auto_commit:
+                        conn.commit()
+        # raise Exception('OH NO')
 
     def analyze(self, conn):
-        pass
+        """Runs `analyze` on each table. This improves performance.
+
+        See the `Postgres documentation for Analyze
+        <https://www.postgresql.org/docs/9.1/static/sql-analyze.html>`_
+
+        Args:
+            conn (): connection object
+        """
+        self.logger.info('Analyzing tables...')
+        with conn.cursor() as cursor:
+            for table_ref, table in self.table_definitions.items():
+                self.logger.info(f'Launch analyze for {table.name}')
+                self._execute(cursor, 'ANALYZE %s' % table.name)
 
 
 class JSONSchemaToPostgres(JSONSchemaToDatabase):

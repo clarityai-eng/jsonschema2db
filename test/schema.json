@@ -38,9 +38,6 @@
             "type": "integer"
         },
         "Address": {
-            "type": "string"
-        },
-        "BillingAddress": {
             "$ref": "#/definitions/address"
         }
     }

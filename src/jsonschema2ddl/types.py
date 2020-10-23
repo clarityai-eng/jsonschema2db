@@ -30,3 +30,8 @@ COLUMNS_TYPES = {
     'postgres': POSTGRES_TYPES,
     'redshift': REDSHIFT_TYPES,
 }
+
+FK_TYPES = {
+    'serial': 'bigint',
+    'int identity(1, 1) not null': 'bigint',
+}
