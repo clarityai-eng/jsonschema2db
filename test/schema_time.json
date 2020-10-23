@@ -4,16 +4,13 @@
     "definitions": {
         "date": {
             "type": "string",
-            "format": "string"
-        },
-        "timestamp": {
-            "type": "string",
-            "format": "date-time"
+            "format": "date"
         }
     },
     "properties": {
         "ts": {
-            "$ref": "#/definitions/timestamp"
+            "type": "string",
+            "format": "date-time"
         },
         "d": {
             "$ref": "#/definitions/date"

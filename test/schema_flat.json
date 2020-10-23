@@ -5,7 +5,8 @@
     "comment": "the root of everything",
     "properties": {
         "UserId": {
-            "type": "integer"
+            "type": "integer",
+            "pk": true
         },
         "UserName": {
             "type": "string"
@@ -19,5 +20,6 @@
         "Address": {
             "type": "string"
         }
-    }
+    },
+    "index": []
 }
