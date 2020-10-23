@@ -11,7 +11,6 @@ all: setup lint test docs  ## Execute all the build steps
 .PHONY: setup
 setup:  ## Setup dev environment
 	poetry install
-	poetry run vscode
 
 .PHONY: install
 install:  ## Install dev environment
@@ -28,7 +27,7 @@ lint:  ## Perform linting and formatting
 
 .PHONY: test
 test:  ## Run tests
-	poetry run pytest --cov=jsonschema2ddl -v test/
+	@poetry run pytest --cov=jsonschema2ddl -v test/
 
 .PHONY: docs
 docs:   ## Produce documentation

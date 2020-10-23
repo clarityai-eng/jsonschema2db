@@ -1,0 +1,396 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>jsonschema2ddl.translators &mdash; jsonschema2ddl  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> jsonschema2ddl
+          
+
+          
+            
+            <img src="../../_static/clarity.svg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">Project General Info</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">Module Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">jsonschema2ddl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>jsonschema2ddl.translators</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for jsonschema2ddl.translators</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
+
+<span class="kn">from</span> <span class="nn">jsonschema2ddl.models</span> <span class="kn">import</span> <span class="n">Column</span><span class="p">,</span> <span class="n">Table</span>
+<span class="kn">from</span> <span class="nn">jsonschema2ddl.utils</span> <span class="kn">import</span> <span class="n">db_column_name</span><span class="p">,</span> <span class="n">db_table_name</span>
+
+
+<div class="viewcode-block" id="JSONSchemaToDatabase"><a class="viewcode-back" href="../../api/jsonschema2ddl.html#jsonschema2ddl.translators.JSONSchemaToDatabase">[docs]</a><span class="k">class</span> <span class="nc">JSONSchemaToDatabase</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;JSONSchemaToDatabase is the mother class for everything.</span>
+
+<span class="sd">    Typically you want to instantiate a `JSONSchemaToPostgres` object, and</span>
+<span class="sd">    run :func:`create_tables` to create all the tables. Run :func:`create_links`</span>
+<span class="sd">    to populate all references properly and add foreign keys between tables.</span>
+<span class="sd">    Optionally you can run :func:`analyze` finally which optimizes the tables.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;JSONSchemaToDatabase&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">schema</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span>
+            <span class="n">database_flavor</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;postgres&quot;</span><span class="p">,</span>
+            <span class="n">schema_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># postgres_schema</span>
+            <span class="n">abbreviations</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="p">{},</span>  <span class="c1"># TODO: Implement abbreviations</span>
+            <span class="n">extra_columns</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="p">[],</span>  <span class="c1"># TODO: Implement extra columns</span>
+            <span class="n">root_table_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;root&#39;</span><span class="p">,</span>
+            <span class="n">log_level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;LOG_LEVEL&#39;</span><span class="p">,</span> <span class="s1">&#39;DEBUG&#39;</span><span class="p">)):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">log_level</span><span class="p">)</span>
+        <span class="c1"># Table.logger = self.logger.getChild(&#39;Table&#39;)</span>
+        <span class="c1"># Column.logger = self.logger.getChild(&#39;Column&#39;)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">database_flavor</span> <span class="o">=</span> <span class="n">database_flavor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schema_name</span> <span class="o">=</span> <span class="n">schema_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root_table_name</span> <span class="o">=</span> <span class="n">db_table_name</span><span class="p">(</span><span class="n">root_table_name</span><span class="p">,</span> <span class="n">schema_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extra_columns</span> <span class="o">=</span> <span class="n">extra_columns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">abbreviations</span> <span class="o">=</span> <span class="n">abbreviations</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">table_definitions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_table_definitions</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Table definitions initialized&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_create_table_definitions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="c1"># NOTE: create first empty tables to reference later in columns</span>
+        <span class="n">table_definitions</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">columns_definitions</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">schema_definitions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;definitions&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">object_schema</span> <span class="ow">in</span> <span class="n">schema_definitions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">ref</span> <span class="o">=</span> <span class="n">object_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;$id&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">&quot;#/definitions/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="n">object_schema</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;object&#39;</span><span class="p">:</span>
+                <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span>
+                    <span class="n">ref</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">db_table_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">schema_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_name</span><span class="p">),</span>
+                    <span class="n">comment</span><span class="o">=</span><span class="n">object_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;comment&#39;</span><span class="p">),</span>
+                    <span class="n">jsonschema_fields</span><span class="o">=</span><span class="n">object_schema</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">table_definitions</span><span class="p">[</span><span class="n">table</span><span class="o">.</span><span class="n">ref</span><span class="p">]</span> <span class="o">=</span> <span class="n">table</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># NOTE: Create new column for main table</span>
+                <span class="n">column</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">db_column_name</span><span class="p">(</span><span class="n">name</span><span class="p">),</span>
+                    <span class="n">database_flavor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">database_flavor</span><span class="p">,</span>
+                    <span class="n">jsonschema_type</span><span class="o">=</span><span class="n">object_schema</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">],</span>
+                    <span class="n">jsonschema_fields</span><span class="o">=</span><span class="n">object_schema</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">columns_definitions</span><span class="p">[</span><span class="n">ref</span><span class="p">]</span> <span class="o">=</span> <span class="n">column</span>
+
+        <span class="n">root_table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span>
+            <span class="n">ref</span><span class="o">=</span><span class="s1">&#39;root&#39;</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">root_table_name</span><span class="p">,</span>
+            <span class="n">comment</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;comment&#39;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+            <span class="n">jsonschema_fields</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">table_definitions</span><span class="p">[</span><span class="n">root_table</span><span class="o">.</span><span class="n">ref</span><span class="p">]</span> <span class="o">=</span> <span class="n">root_table</span>
+
+        <span class="k">for</span> <span class="n">ref</span><span class="p">,</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">table_definitions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">table_definitions</span><span class="p">[</span><span class="n">ref</span><span class="p">]</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">expand_columns</span><span class="p">(</span><span class="n">table_definitions</span><span class="p">,</span> <span class="n">columns_definitions</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">table_definitions</span>
+
+    <span class="k">def</span> <span class="nf">_execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cursor</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">query_ok_to_print</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+
+<div class="viewcode-block" id="JSONSchemaToDatabase.create_tables"><a class="viewcode-back" href="../../api/jsonschema2ddl.html#jsonschema2ddl.translators.JSONSchemaToDatabase.create_tables">[docs]</a>    <span class="k">def</span> <span class="nf">create_tables</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">conn</span><span class="p">,</span>
+            <span class="n">drop_schema</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">drop_tables</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">drop_cascade</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="n">auto_commit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+
+        <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span> <span class="k">as</span> <span class="n">cursor</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Creating tables in the schema </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">drop_schema</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Dropping schema </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_name</span><span class="si">}</span><span class="s1">!!&#39;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_execute</span><span class="p">(</span>
+                        <span class="n">cursor</span><span class="p">,</span>
+                        <span class="sa">f</span><span class="s1">&#39;DROP SCHEMA IF EXISTS </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_name</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;CASCADE;&quot;</span> <span class="k">if</span> <span class="n">drop_cascade</span> <span class="k">else</span> <span class="s2">&quot;;&quot;</span><span class="si">}</span><span class="s1">&#39;</span>
+                    <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_execute</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;CREATE SCHEMA IF NOT EXISTS </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_name</span><span class="si">}</span><span class="s1">;&#39;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">table_definitions</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">table_ref</span><span class="p">,</span> <span class="n">table</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_definitions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="c1"># FIXME: Move to a separate method</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Trying to create table </span><span class="si">{</span><span class="n">table</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">table_ref</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">drop_tables</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Dropping table </span><span class="si">{</span><span class="n">table</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">!!&#39;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_execute</span><span class="p">(</span>
+                        <span class="n">cursor</span><span class="p">,</span>
+                        <span class="sa">f</span><span class="s1">&#39;DROP TABLE IF EXISTS </span><span class="si">{</span><span class="n">table</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;CASCADE;&quot;</span> <span class="k">if</span> <span class="n">drop_cascade</span> <span class="k">else</span> <span class="s2">&quot;;&quot;</span><span class="si">}</span><span class="s1">&#39;</span>
+                    <span class="p">)</span>
+                <span class="n">all_cols</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">&#39; &quot;</span><span class="si">{</span><span class="n">col</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&quot; </span><span class="si">{</span><span class="n">col</span><span class="o">.</span><span class="n">data_type</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+                <span class="n">unique_cols</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s1">&quot;&#39;</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">is_unique</span><span class="p">]</span>
+                <span class="n">create_q</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;CREATE TABLE </span><span class="si">{</span><span class="n">table</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> ( &quot;&quot;&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="si">{</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">all_cols</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;&quot;&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="si">{</span><span class="s2">&quot;, UNIQUE (&quot;</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unique_cols</span><span class="p">)</span> <span class="o">+</span>  <span class="s2">&quot;)&quot;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_cols</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="si">}</span><span class="s2"> &quot;&quot;&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="si">{</span><span class="s2">&quot;, PRIMARY KEY (&quot;</span> <span class="o">+</span> <span class="n">table</span><span class="o">.</span><span class="n">primary_key</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span>  <span class="s2">&quot;)&quot;</span> <span class="k">if</span> <span class="n">table</span><span class="o">.</span><span class="n">primary_key</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="si">}</span><span class="s2">); &quot;&quot;&quot;</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_execute</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">create_q</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">table</span><span class="o">.</span><span class="n">comment</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Set the following comment on table </span><span class="si">{</span><span class="n">table</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">table</span><span class="o">.</span><span class="n">comment</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_execute</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;COMMENT ON TABLE </span><span class="si">{</span><span class="n">table</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> IS &#39;</span><span class="si">{</span><span class="n">table</span><span class="o">.</span><span class="n">comment</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">comment</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Set the following comment on column </span><span class="si">{</span><span class="n">col</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">col</span><span class="o">.</span><span class="n">comment</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_execute</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;COMMENT ON COLUMN </span><span class="si">{</span><span class="n">table</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">.&quot;</span><span class="si">{</span><span class="n">col</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&quot; IS &#39;</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">col</span><span class="o">.</span><span class="n">comment</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Table created!&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">auto_commit</span><span class="p">:</span>
+            <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="JSONSchemaToDatabase.create_links"><a class="viewcode-back" href="../../api/jsonschema2ddl.html#jsonschema2ddl.translators.JSONSchemaToDatabase.create_links">[docs]</a>    <span class="k">def</span> <span class="nf">create_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conn</span><span class="p">,</span> <span class="n">auto_commit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds foreign keys between tables.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            conn (): connection object</span>
+<span class="sd">            auto_commit (bool, Optional): Defaults to False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">table_ref</span><span class="p">,</span> <span class="n">table</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_definitions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">table_ref</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">is_fk</span><span class="p">():</span>
+                    <span class="n">fk_q</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;&quot;&quot;ALTER TABLE </span><span class="si">{</span><span class="n">table</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> &quot;&quot;&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;&quot;&quot;ADD CONSTRAINT fk_</span><span class="si">{</span><span class="n">col</span><span class="o">.</span><span class="n">table_ref</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2"> &quot;&quot;&quot;</span>  <span class="c1"># FIXME: Formatting hack</span>
+                        <span class="sa">f</span><span class="s2">&quot;&quot;&quot;FOREIGN KEY (</span><span class="si">{</span><span class="n">col</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">) &quot;&quot;&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;&quot;&quot;REFERENCES </span><span class="si">{</span><span class="n">col</span><span class="o">.</span><span class="n">table_ref</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">col</span><span class="o">.</span><span class="n">table_ref</span><span class="o">.</span><span class="n">primary_key</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">); &quot;&quot;&quot;</span>
+                    <span class="p">)</span>
+                    <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span> <span class="k">as</span> <span class="n">cursor</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_execute</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">fk_q</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">auto_commit</span><span class="p">:</span>
+                        <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+        <span class="c1"># raise Exception(&#39;OH NO&#39;)</span>
+
+<div class="viewcode-block" id="JSONSchemaToDatabase.analyze"><a class="viewcode-back" href="../../api/jsonschema2ddl.html#jsonschema2ddl.translators.JSONSchemaToDatabase.analyze">[docs]</a>    <span class="k">def</span> <span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conn</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Runs `analyze` on each table. This improves performance.</span>
+
+<span class="sd">        See the `Postgres documentation for Analyze</span>
+<span class="sd">        &lt;https://www.postgresql.org/docs/9.1/static/sql-analyze.html&gt;`_</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            conn (): connection object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Analyzing tables...&#39;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span> <span class="k">as</span> <span class="n">cursor</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">table_ref</span><span class="p">,</span> <span class="n">table</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_definitions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Launch analyze for </span><span class="si">{</span><span class="n">table</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_execute</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="s1">&#39;ANALYZE </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">table</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="JSONSchemaToPostgres"><a class="viewcode-back" href="../../api/jsonschema2ddl.html#jsonschema2ddl.translators.JSONSchemaToPostgres">[docs]</a><span class="k">class</span> <span class="nc">JSONSchemaToPostgres</span><span class="p">(</span><span class="n">JSONSchemaToDatabase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Shorthand for JSONSchemaToDatabase(..., database_flavor=&#39;postgres&#39;)&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;database_flavor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;postgres&#39;</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">JSONSchemaToPostgres</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="JSONSchemaToRedshift"><a class="viewcode-back" href="../../api/jsonschema2ddl.html#jsonschema2ddl.translators.JSONSchemaToRedshift">[docs]</a><span class="k">class</span> <span class="nc">JSONSchemaToRedshift</span><span class="p">(</span><span class="n">JSONSchemaToDatabase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Shorthand for JSONSchemaToDatabase(..., database_flavor=&#39;redshift&#39;)&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;database_flavor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;redshift&#39;</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">JSONSchemaToRedshift</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Clarity.ai
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
