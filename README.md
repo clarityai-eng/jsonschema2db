@@ -102,7 +102,6 @@ conn.comit()
 * A `root` table is created for the schema with the correct types
 * Custom PostgreSQL schema to create the tables. The PostgreSQL schema can be drop before deploying the tables.
 * Create subtables using the `definitions` sections in the jsonchema document. The name of these tables will be the one defined in the jsonschema. The relationships between the tables can be created as well with the `create_links()` function. This also requires to have some column as the primary key. You can specify this column with the `pk` field in the definition of the schema. If there are no `pk` column defined, a default `id` column will be created for the table.
-*
 * Following types are supported:
   * `boolean` -> converted to type `bool`.
   * `number` -> converted to type `float`.
