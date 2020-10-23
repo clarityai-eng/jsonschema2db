@@ -54,4 +54,4 @@ def test_table(schema_flat):
 @pytest.mark.skip(reason='Test not implemented')
 def test_fkcolumn():
     # TODO: Create table and check the data type
-    assert False
+    assert FKColumn(name='simple')

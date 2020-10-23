@@ -5,19 +5,6 @@ from typing import Dict, List
 from jsonschema2ddl.models import Column, Table
 from jsonschema2ddl.utils import db_column_name, db_table_name
 
-# TODO: Take into acount enums properly
-# TODO: Take into acount varchar length
-# TODO: Take into acount $id
-# Create a default Id if no id specified
-# Select a column as id
-# Specify index:true in the properties
-# Specify a list of indexes
-# Same thing with unique columns
-# TODO: Take into account objets
-# TODO: Use title as default table name
-# TODO: Support only one level recursion in objects
-# TODO: Support pattern constraints -> https://gitlab.clarity.ai/product/data/schemas/-/blob/master/level_1/esg_impact/clarity_raw_data.schema.json#L21
-
 
 class JSONSchemaToDatabase:
     """JSONSchemaToDatabase is the mother class for everything.
@@ -151,7 +138,6 @@ class JSONSchemaToDatabase:
             conn.commit()
 
     def create_links(self, conn, auto_commit: bool = True):
-
         """Adds foreign keys between tables.
 
         Args:

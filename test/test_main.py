@@ -21,7 +21,6 @@ def test_flat_schema(db, schema_flat):
     )
 
     translator.create_tables(connection, auto_commit=True)
-    # FIXME: Create Links for subtables
     translator.create_links(connection)
     translator.analyze(connection)
 
@@ -50,7 +49,6 @@ def test_schema(db, schema):
     )
 
     translator.create_tables(connection, auto_commit=True)
-    # FIXME: Create Links for subtables
     translator.create_links(connection)
     translator.analyze(connection)
 
@@ -105,7 +103,6 @@ def test_extra_columns(db, schema_flat):
     )
 
     translator.create_tables(connection, auto_commit=True)
-    # FIXME: Create Links for subtables
     # translator.create_links(connection)
     translator.analyze(connection)
 

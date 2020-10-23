@@ -12,7 +12,6 @@ POSTGRES_TYPES = {
     'string': 'varchar({})',
     'enum': 'text',
     'integer': 'bigint',
-    # 'integer': 'int{size}',
     'timestamp': 'timestamptz',
     'date': 'date',
     'link': 'integer',
