@@ -7,7 +7,6 @@ from urllib.request import urlopen
 import jsonschema
 
 from jsonschema2ddl.models import Column, Table
-from jsonschema2ddl.types import COLUMNS_TYPES_PREFERENCE
 from jsonschema2ddl.utils import db_column_name, db_table_name, get_one_schema
 
 
