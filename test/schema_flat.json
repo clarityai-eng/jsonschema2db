@@ -1,5 +1,5 @@
 {
-    "$schema": "http://json-schema.org/schema#",
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
     "title": "Example schema",
     "type": "object",
     "comment": "the root of everything",
@@ -15,7 +15,14 @@
             "type": "string"
         },
         "Age": {
-            "type": "integer"
+            "anyOf": [
+                {
+                    "type": "integer"
+                },
+                {
+                    "type": "number"
+                }
+            ]
         },
         "Address": {
             "type": "string"

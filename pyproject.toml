@@ -8,6 +8,7 @@ authors = ["Pablo San José <pablo.sanjose@clarity.ai>"]
 python = "^3.7"
 change_case = "^0.5.2"
 iso8601 = "^0.1.12"
+jsonschema = "^3.2.0"
 
 
 [tool.poetry.dev-dependencies]

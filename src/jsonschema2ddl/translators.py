@@ -1,9 +1,14 @@
+import json
 import logging
 import os
 from typing import Dict, List
+from urllib.request import urlopen
+
+import jsonschema
 
 from jsonschema2ddl.models import Column, Table
-from jsonschema2ddl.utils import db_column_name, db_table_name
+from jsonschema2ddl.types import COLUMNS_TYPES_PREFERENCE
+from jsonschema2ddl.utils import db_column_name, db_table_name, get_one_schema
 
 
 class JSONSchemaToDatabase:
@@ -13,6 +18,15 @@ class JSONSchemaToDatabase:
     run :func:`create_tables` to create all the tables. Run :func:`create_links`
     to populate all references properly and add foreign keys between tables.
     Optionally you can run :func:`analyze` finally which optimizes the tables.
+
+    Attributes:
+        schema (Dict): the schema to translate to tables.
+        database_flavor (str): the flavor of the db. One of Postgres or Redshift.
+        db_schema_name (str): the name of the schema in the database to create the tables.
+        root_table_name (str): Name of the root table for the schema.
+        abbreviations (Dict): Dictionary of abbreviations for columns.
+        extra_columns (List[Dict]): List of extra columns.
+        log_level (str): Log level of the deployment. Default 'DEBUG'.
     """
 
     logger: logging.Logger = logging.getLogger('JSONSchemaToDatabase')
@@ -21,39 +35,65 @@ class JSONSchemaToDatabase:
             self,
             schema: Dict,
             database_flavor: str = "postgres",
-            schema_name: str = None,  # postgres_schema
+            db_schema_name: str = None,
             abbreviations: Dict = {},  # TODO: Implement abbreviations
             extra_columns: List = [],  # TODO: Implement extra columns
             root_table_name: str = 'root',
             log_level: str = os.getenv('LOG_LEVEL', 'DEBUG')):
 
         self.logger.setLevel(log_level)
-        # Table.logger = self.logger.getChild('Table')
-        # Column.logger = self.logger.getChild('Column')
+        Table.logger = self.logger.getChild('Table')
+        Column.logger = self.logger.getChild('Column')
+        Table.logger.setLevel(log_level)
+        Column.logger.setLevel(log_level)
 
         self.schema = schema
 
         self.database_flavor = database_flavor
-        self.schema_name = schema_name
-        self.root_table_name = db_table_name(root_table_name, schema_name=self.schema_name)
+        self.db_schema_name = db_schema_name
+        self.root_table_name = db_table_name(root_table_name, schema_name=self.db_schema_name)
         self.extra_columns = extra_columns
         self.abbreviations = abbreviations
+
+        self._validate_schema()
 
         self.table_definitions = self._create_table_definitions()
         self.logger.info('Table definitions initialized')
 
-    def _create_table_definitions(self):
+    def _validate_schema(self):
+        """Validates the jsonschema itself against the `$schema` url.
 
+        Currently, some redirections are not supported.
+
+        Raises:
+            jsonschema.ValidationError: Schema is invalid
+        """
+        metaschema_uri = self.schema.get('$schema')
+        metaschema_uri = urlopen(metaschema_uri).url
+
+        meta_schema = json.loads(urlopen(metaschema_uri).read())
+        jsonschema.validate(instance=self.schema, schema=meta_schema)
+        self.logger.debug('Schema is valid')
+
+    def _create_table_definitions(self):
+        """Creates the table definitions.
+
+        Returns:
+            Dict[str, Table]: A dictionary with tables ids and the tables objects to create.
+        """
         # NOTE: create first empty tables to reference later in columns
         table_definitions = dict()
         columns_definitions = dict()
         schema_definitions = self.schema.get('definitions', {})
         for name, object_schema in schema_definitions.items():
             ref = object_schema.get("$id") or f"#/definitions/{name}"
+            if 'type' not in object_schema:
+                object_schema = get_one_schema(object_schema)
+
             if object_schema['type'] == 'object':
                 table = Table(
                     ref=ref,
-                    name=db_table_name(name, schema_name=self.schema_name),
+                    name=db_table_name(name, schema_name=self.db_schema_name),
                     comment=object_schema.get('comment'),
                     jsonschema_fields=object_schema,
                 )
@@ -82,7 +122,16 @@ class JSONSchemaToDatabase:
         return table_definitions
 
     def _execute(self, cursor, query, args=None, query_ok_to_print=True):
-        self.logger.debug(query)
+        """Helper method to execute and debug a query.
+
+        Args:
+            cursor (psycopg2.cursor): Cursor object of the db connection.
+            query (str): query to execute.
+            args (List, optional): List of arguments for the execute command. Defaults to None.
+            query_ok_to_print (bool, optional): Defaults to True.
+        """
+        if query_ok_to_print:
+            self.logger.debug(query)
         cursor.execute(query, args)
 
     def create_tables(
@@ -92,17 +141,27 @@ class JSONSchemaToDatabase:
             drop_tables: bool = False,
             drop_cascade: bool = True,
             auto_commit: bool = False):
+        """Create the tables for the schema
 
+        Args:
+            conn (psocopg2.connection): Connection object to the db.
+            drop_schema (bool, optional): Whether or not drop the schema if exists.
+                Defaults to False.
+            drop_tables (bool, optional): Whether or not drop the tables if exists.
+                Defaults to False.
+            drop_cascade (bool, optional): Execute drops with cascade. Defaults to True.
+            auto_commit (bool, optional): autocomit after finishing. Defaults to False.
+        """
         with conn.cursor() as cursor:
-            self.logger.info(f'Creating tables in the schema {self.schema_name}')
-            if self.schema_name is not None:
+            self.logger.info(f'Creating tables in the schema {self.db_schema_name}')
+            if self.db_schema_name is not None:
                 if drop_schema:
-                    self.logger.info(f'Dropping schema {self.schema_name}!!')
+                    self.logger.info(f'Dropping schema {self.db_schema_name}!!')
                     self._execute(
                         cursor,
-                        f'DROP SCHEMA IF EXISTS {self.schema_name} {"CASCADE;" if drop_cascade else ";"}'
+                        f'DROP SCHEMA IF EXISTS {self.db_schema_name} {"CASCADE;" if drop_cascade else ";"}'
                     )
-                self._execute(cursor, f'CREATE SCHEMA IF NOT EXISTS {self.schema_name};')
+                self._execute(cursor, f'CREATE SCHEMA IF NOT EXISTS {self.db_schema_name};')
 
             self.logger.debug(self.table_definitions.keys())
             for table_ref, table in self.table_definitions.items():
@@ -141,14 +200,11 @@ class JSONSchemaToDatabase:
         """Adds foreign keys between tables.
 
         Args:
-            conn (): connection object
-            auto_commit (bool, Optional): Defaults to False
+            conn (psocopg2.connection): connection object.
+            auto_commit (bool, Optional): Defaults to False.
         """
         for table_ref, table in self.table_definitions.items():
-            print(table_ref)
-            print(table)
             for col in table.columns:
-                print(col)
                 if col.is_fk():
                     fk_q = (
                         f"""ALTER TABLE {table.name} """
@@ -169,7 +225,7 @@ class JSONSchemaToDatabase:
         <https://www.postgresql.org/docs/9.1/static/sql-analyze.html>`_
 
         Args:
-            conn (): connection object
+            conn (psocopg2.connection): connection object.
         """
         self.logger.info('Analyzing tables...')
         with conn.cursor() as cursor:

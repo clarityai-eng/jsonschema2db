@@ -16,7 +16,7 @@ def test_flat_schema(db, schema_flat):
     connection = db["connection"]
     translator = JSONSchemaToDatabase(
         schema_flat,
-        schema_name='schm',
+        db_schema_name='schm',
         root_table_name='my_table',
     )
 
@@ -44,7 +44,7 @@ def test_schema(db, schema):
     connection = db["connection"]
     translator = JSONSchemaToDatabase(
         schema,
-        schema_name='schm',
+        db_schema_name='schm',
         root_table_name='my_table',
     )
 
@@ -65,7 +65,6 @@ def test_schema(db, schema):
 
         result = conn.execute('SELECT * FROM "schm"."address"')
         rows = [row for row in result]
-        print(rows)
         assert len(rows) == 2
 
         data = (
@@ -97,7 +96,7 @@ def test_extra_columns(db, schema_flat):
     connection = db["connection"]
     translator = JSONSchemaToDatabase(
         schema_flat,
-        schema_name='schm',
+        db_schema_name='schm',
         root_table_name='my_table',
         extra_columns=[('points', 'integer')],
     )
@@ -147,7 +146,7 @@ def test_time_types(db, schema_time):
     translator = JSONSchemaToDatabase(schema_time)
 
     translator.create_tables(connection, auto_commit=True)
-    print(translator.table_definitions)
+
     with db['engine'].connect() as conn:
         data = (
             {'ts': datetime.datetime(2018, 2, 3, 12, 45, 56), 'd': datetime.date(2018, 7, 8)},
