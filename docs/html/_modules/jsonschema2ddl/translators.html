@@ -220,7 +220,7 @@
 <span class="sd">        Raises:</span>
 <span class="sd">            jsonschema.ValidationError: Schema is invalid</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">metaschema_uri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;$schema&#39;</span><span class="p">)</span>
+        <span class="n">metaschema_uri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;$schema&#39;</span><span class="p">,</span> <span class="s1">&#39;https://json-schema.org/draft-07/schema&#39;</span><span class="p">)</span>
         <span class="n">metaschema_uri</span> <span class="o">=</span> <span class="n">urlopen</span><span class="p">(</span><span class="n">metaschema_uri</span><span class="p">)</span><span class="o">.</span><span class="n">url</span>
 
         <span class="n">meta_schema</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">urlopen</span><span class="p">(</span><span class="n">metaschema_uri</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
