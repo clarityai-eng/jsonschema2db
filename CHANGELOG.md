@@ -6,11 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
-## [0.1.0] - 2020-10-08
+## [0.1.0] - 2020-10-26
 
 This is the first release of the jsonschema2ddl repo. This project is a direct fork from the original.
 
-In this first we don't include major changes
+In this first we don't include major changes in functionality but there is a good amount of code refactor that will make this project more maintainable.
 
 ### Added
 
