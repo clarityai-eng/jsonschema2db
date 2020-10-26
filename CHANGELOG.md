@@ -14,16 +14,17 @@ In this first we don't include major changes in functionality but there is a goo
 
 ### Added
 
-- Don't drop the schema when creating the tables by default. A new parameter is introduced to do so.
-- Provide options to select whether to drop the tables if exists and with cascade or not.
-- Provide an option to autocommit the changes in the schema creation.
+- feat: Don't drop the schema when creating the tables by default. A new parameter is introduced to do so.
+- feat: Provide options to select whether to drop the tables if exists and with cascade or not.
+- feat: Provide an option to autocommit the changes in the schema creation.
+- feat: Validate jsonschema before launching the migrations
 
 ### Changed
 
-- docs: Use different docs structure
+- feat: Code is organized in a more object oriented model structure for easy extensibility and mantainability.
+- tests: Use testscontainers to be able to tests the postgres inserts
 - chore: Use poetry for dependency and publishing
 - chore: Provide Makefile for development
 - chore: More elaborate travis.ci to be able to push based on tags
 - chore: Change the project structure for the company python standars
-- tests: Use testscontainers to be able to tests the postgres inserts
-- feat: code is organized in a more object oriented model structure for easy extensibility and mantainability.
+- docs: Use different docs structure
