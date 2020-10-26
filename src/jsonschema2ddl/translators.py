@@ -67,7 +67,7 @@ class JSONSchemaToDatabase:
         Raises:
             jsonschema.ValidationError: Schema is invalid
         """
-        metaschema_uri = self.schema.get('$schema')
+        metaschema_uri = self.schema.get('$schema', 'https://json-schema.org/draft-07/schema')
         metaschema_uri = urlopen(metaschema_uri).url
 
         meta_schema = json.loads(urlopen(metaschema_uri).read())
