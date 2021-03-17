@@ -1,0 +1,29 @@
+name: Build and Test
+
+on:
+  push:
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
+          submodules: "recursive"
+
+      - name: Install python and dependencies
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1.1.2
+
+      - name: Build and test
+        run: make

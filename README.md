@@ -1,6 +1,8 @@
 # JSON Schema ➣ DDL
 
-[![Travis status](https://img.shields.io/travis/clarityai-eng/jsonschema2ddl/master.svg?style=flat)](https://travis-ci.org/clarityai-eng/jsonschema2ddl)
+![GitHub last commit](https://img.shields.io/github/last-commit/clarityai-eng/jsonschema2ddl?logo=hey)
+![Build Workflow Status](https://img.shields.io/github/workflow/status/clarityai-eng/jsonschema2ddl/build)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/clarityai-eng/jsonschema2ddl/blob/master/LICENSE)
 
 > This repository is a fork. Check out the original project [here](https://github.com/better/jsonschema2ddl)
 
@@ -117,14 +119,11 @@ conn.comit()
   * `id` -> converted to type `serial` in postgresql. For redshift, it is converted to `int identity(1, 1) not null`.
 * Schema itself is validated against the `$schema` definition uri.
 
-### Roadmap of new features
+### Known Limitations and Roadmap of New Features
 
 * Specify constraints in the jsonschema.
 * Specify indexes in the jsonschema.
 * Create enums in postgresql.
 * Support pattern constrints
 * Support redirects when validating the `$schema`
-
-## Other
-
-* This repo uses the [MIT license](https://github.com/better/jsonschema2ddl/blob/master/LICENSE).
+* Support nested refs in schema

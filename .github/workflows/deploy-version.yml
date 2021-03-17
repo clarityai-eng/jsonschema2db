@@ -1,0 +1,30 @@
+name: Deploy Version
+
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
+          submodules: "recursive"
+
+      - name: Install python and dependencies
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1.1.2
+
+      - name: Upload new version to pypi
+        run: make version
+        env:
+          PYPI_USER: ${{ secrets.PYPI_USER }}
+          PYPI_PASS: ${{ secrets.PYPI_PASS }}
