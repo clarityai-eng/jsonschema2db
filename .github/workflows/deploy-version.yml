@@ -15,7 +15,7 @@ jobs:
           ref: ${{ github.head_ref }}
           submodules: "recursive"
 
-      - name: Install python and dependencies
+      - name: Install Python
         uses: actions/setup-python@v2
         with:
           python-version: "3.7"
@@ -24,7 +24,7 @@ jobs:
         uses: snok/install-poetry@v1.1.2
 
       - name: Upload new version to pypi
-        run: make version
+        run: make setup version
         env:
           PYPI_USER: ${{ secrets.PYPI_USER }}
           PYPI_PASS: ${{ secrets.PYPI_PASS }}

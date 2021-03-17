@@ -24,10 +24,10 @@ test:  ## Run tests
 	@poetry run pytest --cov=jsonschema2ddl -v test/
 
 
+POETRY_EXTRA_ARGS ?=
 .PHONY: version
 version:  ## Upload a new version to PyPI
-	@poetry version $(git describe --tags --abbrev=0)
-	@poetry publish --username ${PYPI_USER} --password ${PYPI_PASS} --build
+	@poetry version $(shell git describe --tags --abbrev=0) && poetry publish --username ${PYPI_USER} --password ${PYPI_PASS} --build $(POETRY_EXTRA_ARGS)
 
 
 .PHONY: docs

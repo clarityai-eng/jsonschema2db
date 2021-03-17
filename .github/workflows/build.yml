@@ -17,7 +17,7 @@ jobs:
           ref: ${{ github.head_ref }}
           submodules: "recursive"
 
-      - name: Install python and dependencies
+      - name: Install Python
         uses: actions/setup-python@v2
         with:
           python-version: "3.7"
@@ -27,3 +27,6 @@ jobs:
 
       - name: Build and test
         run: make
+
+      - name: Dry run deploy
+        run: make version POETRY_EXTRA_ARGS='--dry-run'
