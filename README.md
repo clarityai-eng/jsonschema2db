@@ -117,13 +117,14 @@ conn.comit()
   * `id` -> converted to type `serial` in postgresql. For redshift, it is converted to `int identity(1, 1) not null`.
 * Schema itself is validated against the `$schema` definition uri.
 
-### Roadmap of new features
+### Known Limitations and Roadmap of New Features
 
 * Specify constraints in the jsonschema.
 * Specify indexes in the jsonschema.
 * Create enums in postgresql.
 * Support pattern constrints
 * Support redirects when validating the `$schema`
+* Support nested refs in schema
 
 ## Other
 
