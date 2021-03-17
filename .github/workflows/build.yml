@@ -30,3 +30,6 @@ jobs:
 
       - name: Dry run deploy
         run: make version POETRY_EXTRA_ARGS='--dry-run'
+        env:
+          PYPI_USER: ${{ secrets.PYPI_USER }}
+          PYPI_PASS: ${{ secrets.PYPI_PASS }}
