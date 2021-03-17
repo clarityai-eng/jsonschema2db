@@ -38,6 +38,7 @@ FK_TYPES = {
 }
 
 COLUMNS_TYPES_PREFERENCE = {
+    'null': -1,
     'boolean': 0,
     'bool': 0,
     'enum': 1,
