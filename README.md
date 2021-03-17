@@ -1,6 +1,8 @@
 # JSON Schema ➣ DDL
 
-[![Travis status](https://img.shields.io/travis/clarityai-eng/jsonschema2ddl/master.svg?style=flat)](https://travis-ci.org/clarityai-eng/jsonschema2ddl)
+![GitHub last commit](https://img.shields.io/github/last-commit/clarityai-eng/jsonschema2ddl?logo=hey)
+![Build Workflow Status](https://img.shields.io/github/workflow/status/clarityai-eng/jsonschema2ddl/build)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/clarityai-eng/jsonschema2ddl/blob/master/LICENSE)
 
 > This repository is a fork. Check out the original project [here](https://github.com/better/jsonschema2ddl)
 
@@ -125,7 +127,3 @@ conn.comit()
 * Support pattern constrints
 * Support redirects when validating the `$schema`
 * Support nested refs in schema
-
-## Other
-
-* This repo uses the [MIT license](https://github.com/better/jsonschema2ddl/blob/master/LICENSE).
