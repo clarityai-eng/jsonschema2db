@@ -215,7 +215,6 @@ class JSONSchemaToDatabase:
                         self._execute(cursor, fk_q)
                     if auto_commit:
                         conn.commit()
-        # raise Exception('OH NO')
 
     def analyze(self, conn):
         """Runs `analyze` on each table. This improves performance.
@@ -238,7 +237,7 @@ class JSONSchemaToPostgres(JSONSchemaToDatabase):
 
     def __init__(self, *args, **kwargs):
         kwargs['database_flavor'] = 'postgres'
-        return super(JSONSchemaToPostgres, self).__init__(*args, **kwargs)
+        super(JSONSchemaToPostgres, self).__init__(*args, **kwargs)
 
 
 class JSONSchemaToRedshift(JSONSchemaToDatabase):
@@ -246,4 +245,4 @@ class JSONSchemaToRedshift(JSONSchemaToDatabase):
 
     def __init__(self, *args, **kwargs):
         kwargs['database_flavor'] = 'redshift'
-        return super(JSONSchemaToRedshift, self).__init__(*args, **kwargs)
+        super(JSONSchemaToRedshift, self).__init__(*args, **kwargs)

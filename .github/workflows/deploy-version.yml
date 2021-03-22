@@ -24,7 +24,7 @@ jobs:
         uses: snok/install-poetry@v1.1.2
 
       - name: Upload new version to pypi
-        run: make setup version
+        run: make version
         env:
           PYPI_USER: ${{ secrets.PYPI_USER }}
           PYPI_PASS: ${{ secrets.PYPI_PASS }}

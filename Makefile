@@ -16,7 +16,6 @@ lint:  ## Perform linting and formatting
 	@poetry run autopep8 -i -r ./
 	@echo "Check for errors with flake8"
 	@poetry run flake8 ./
-	@echo "Done"
 
 
 .PHONY: test

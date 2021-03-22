@@ -153,7 +153,7 @@
   <h1>Source code for jsonschema2ddl.models</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Set</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
 
 <span class="kn">from</span> <span class="nn">jsonschema2ddl.types</span> <span class="kn">import</span> <span class="n">COLUMNS_TYPES</span><span class="p">,</span> <span class="n">FK_TYPES</span>
 <span class="kn">from</span> <span class="nn">jsonschema2ddl.utils</span> <span class="kn">import</span> <span class="n">db_column_name</span><span class="p">,</span> <span class="n">get_one_schema</span>
@@ -251,7 +251,7 @@
 <span class="sd">        ref (str): id or reference to the table in the jsonschema.</span>
 <span class="sd">        name (str): name of the table.</span>
 <span class="sd">        database_flavor (str): postgres or redshift. Defaults to postgres.</span>
-<span class="sd">        columns (Set[Column]): columns of the table..</span>
+<span class="sd">        columns (List[Column]): columns of the table.</span>
 <span class="sd">        primary_key (Column): Primary key column of the table.</span>
 <span class="sd">        comment (str): comment of the table. Defaults to None.</span>
 <span class="sd">        indexes (List[str]): Table indexeses (not implemented).</span>
@@ -262,9 +262,9 @@
     <span class="n">ref</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">database_flavor</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;postgres&quot;</span>
-    <span class="n">columns</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Column</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">set</span><span class="p">)</span>
-    <span class="n">primary_key</span><span class="p">:</span> <span class="n">Column</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">comment</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">columns</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Column</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">primary_key</span><span class="p">:</span> <span class="n">Column</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">comment</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">indexes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">unique_columns</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">jsonschema_fields</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -311,7 +311,7 @@
                         <span class="n">database_flavor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">database_flavor</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="k">elif</span> <span class="n">col_object</span><span class="p">[</span><span class="s1">&#39;$ref&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">columns_definitions</span><span class="p">:</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                         <span class="s1">&#39;Column ref a type that is not a object. &#39;</span>
                         <span class="s1">&#39;Copy Column from columns definitions&#39;</span><span class="p">)</span>
                     <span class="n">ref</span> <span class="o">=</span> <span class="n">col_object</span><span class="p">[</span><span class="s1">&#39;$ref&#39;</span><span class="p">]</span>
@@ -319,7 +319,7 @@
                     <span class="n">col_as_dict</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">asdict</span><span class="p">(</span><span class="n">ref_col</span><span class="p">),</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">col_name</span><span class="p">}</span>
                     <span class="n">col</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="o">**</span><span class="n">col_as_dict</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Skipping ref as it is not in table definitions neither in columns definitions&#39;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Skipping ref as it is not in table definitions neither in columns definitions&#39;</span><span class="p">)</span>
                     <span class="k">continue</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">if</span> <span class="s1">&#39;type&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">col_object</span><span class="p">:</span>
@@ -330,7 +330,7 @@
                     <span class="n">jsonschema_type</span><span class="o">=</span><span class="n">col_object</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">],</span>
                     <span class="n">jsonschema_fields</span><span class="o">=</span><span class="n">col_object</span><span class="p">,</span>
                 <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">is_pk</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">primary_key</span> <span class="o">=</span> <span class="n">col</span>
 
@@ -343,10 +343,16 @@
                 <span class="n">database_flavor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">database_flavor</span><span class="p">,</span>
                 <span class="n">jsonschema_type</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">primary_key</span> <span class="o">=</span> <span class="n">col</span>
 
-        <span class="k">return</span> <span class="bp">self</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_deduplicate_columns</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_deduplicate_columns</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">({</span><span class="n">c</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">})</span></div>
 
 
 <div class="viewcode-block" id="FKColumn"><a class="viewcode-back" href="../../api/jsonschema2ddl.html#jsonschema2ddl.models.FKColumn">[docs]</a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>

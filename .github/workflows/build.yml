@@ -29,7 +29,8 @@ jobs:
         run: make
 
       - name: Dry run deploy
-        run: make version POETRY_EXTRA_ARGS='--dry-run'
+        run: make version
         env:
+          POETRY_EXTRA_ARGS: --dry-run
           PYPI_USER: ${{ secrets.PYPI_USER }}
           PYPI_PASS: ${{ secrets.PYPI_PASS }}
