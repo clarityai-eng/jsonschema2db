@@ -1,6 +1,6 @@
 import logging
 from dataclasses import asdict, dataclass, field
-from typing import ClassVar, Dict, List, Set
+from typing import ClassVar, Dict, List
 
 from jsonschema2ddl.types import COLUMNS_TYPES, FK_TYPES
 from jsonschema2ddl.utils import db_column_name, get_one_schema
@@ -98,7 +98,7 @@ class Table:
         ref (str): id or reference to the table in the jsonschema.
         name (str): name of the table.
         database_flavor (str): postgres or redshift. Defaults to postgres.
-        columns (Set[Column]): columns of the table..
+        columns (List[Column]): columns of the table.
         primary_key (Column): Primary key column of the table.
         comment (str): comment of the table. Defaults to None.
         indexes (List[str]): Table indexeses (not implemented).
@@ -109,9 +109,9 @@ class Table:
     ref: str
     name: str
     database_flavor: str = "postgres"
-    columns: Set[Column] = field(default_factory=set)
-    primary_key: Column = None
-    comment: str = None
+    columns: List[Column] = field(default_factory=list)
+    primary_key: Column = field(default=None)
+    comment: str = field(default=None)
     indexes: List[str] = field(default_factory=list)
     unique_columns: List[str] = field(default_factory=list)
     jsonschema_fields: Dict = field(default_factory=dict, repr=False)
@@ -158,7 +158,7 @@ class Table:
                         database_flavor=self.database_flavor,
                     )
                 elif col_object['$ref'] in columns_definitions:
-                    logging.debug(
+                    self.logger.debug(
                         'Column ref a type that is not a object. '
                         'Copy Column from columns definitions')
                     ref = col_object['$ref']
@@ -166,7 +166,7 @@ class Table:
                     col_as_dict = {**asdict(ref_col), 'name': col_name}
                     col = Column(**col_as_dict)
                 else:
-                    logging.debug('Skipping ref as it is not in table definitions neither in columns definitions')
+                    self.logger.debug('Skipping ref as it is not in table definitions neither in columns definitions')
                     continue
             else:
                 if 'type' not in col_object:
@@ -177,7 +177,7 @@ class Table:
                     jsonschema_type=col_object['type'],
                     jsonschema_fields=col_object,
                 )
-            self.columns.add(col)
+            self.columns.append(col)
             if col.is_pk:
                 self.primary_key = col
 
@@ -190,10 +190,16 @@ class Table:
                 database_flavor=self.database_flavor,
                 jsonschema_type='id',
             )
-            self.columns.add(col)
+            self.columns.append(col)
             self.primary_key = col
 
+        self.columns = self._deduplicate_columns(self.columns)
+
         return self
+
+    @staticmethod
+    def _deduplicate_columns(columns) -> list:
+        return list({c: None for c in columns})
 
 
 @dataclass(eq=False)
