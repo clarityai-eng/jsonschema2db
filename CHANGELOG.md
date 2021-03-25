@@ -6,7 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
-## [0.1.0] - 2020-10-26
+## [0.2.0](https://github.com/clarityai-eng/jsonschema2ddl/releases/tag/0.2.0) - 2021-03-25
+
+### Added
+
+- Feat: use the `format` parameter in jsonschema to determine date and datetime types.
+
+## [0.1.2](https://github.com/clarityai-eng/jsonschema2ddl/releases/tag/0.1.2) - 2021-03-22
+
+### Changed
+
+- Feat: preserve order in columns definitions
+- Chore: Update pipelines with dry run option
+
+## [0.1.1](https://github.com/clarityai-eng/jsonschema2ddl/releases/tag/0.1.1) - 2021-03-17
+
+### Changed
+
+- Chore: Migrate from travis to github actions
+- Feat: Accept null as column type with lowest priority
+
+## [0.1.0](https://github.com/clarityai-eng/jsonschema2ddl/releases/tag/0.1.0) - 2020-10-26
 
 This is the first release of the jsonschema2ddl repo. This project is a direct fork from the original.
 
