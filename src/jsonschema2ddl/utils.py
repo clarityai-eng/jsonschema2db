@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Tuple
 
 from change_case import ChangeCase
 from jsonschema import ValidationError
@@ -23,6 +23,13 @@ def get_one_schema(object_schema) -> Dict:
     types = object_schema.get('allOf', object_schema.get('anyOf', object_schema.get('oneOf', [])))
     if not types:
         raise ValidationError("Neither 'type', 'allOf', 'anyOf', 'oneOf' defined for field. Aborting!")
-    types_with_preference = map(lambda obj: (obj, COLUMNS_TYPES_PREFERENCE[obj['type']]), types)
+
+    def get_type_preference(type_definition: Dict) -> Tuple[Dict, float]:
+        schema_type: str = type_definition['type']
+        if 'format' in type_definition and type_definition['format'] in COLUMNS_TYPES_PREFERENCE:
+            schema_type: str = type_definition['format']
+        return type_definition, COLUMNS_TYPES_PREFERENCE[schema_type]
+
+    types_with_preference = map(get_type_preference, types)
     max_preference_type = max(types_with_preference, key=lambda x: x[1])[0]
     return max_preference_type

@@ -515,7 +515,7 @@ Defaults to False.</p></li>
 <span id="jsonschema2ddl-translators-module"></span><h2>jsonschema2ddl.translators module<a class="headerlink" href="#module-jsonschema2ddl.translators" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="jsonschema2ddl.translators.JSONSchemaToDatabase">
-<em class="property">class </em><code class="sig-prename descclassname">jsonschema2ddl.translators.</code><code class="sig-name descname">JSONSchemaToDatabase</code><span class="sig-paren">(</span><em class="sig-param">schema: Dict</em>, <em class="sig-param">database_flavor: str = 'postgres'</em>, <em class="sig-param">db_schema_name: str = None</em>, <em class="sig-param">abbreviations: Dict = {}</em>, <em class="sig-param">extra_columns: List = []</em>, <em class="sig-param">root_table_name: str = 'root'</em>, <em class="sig-param">log_level: str = 'DEBUG'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/jsonschema2ddl/translators.html#JSONSchemaToDatabase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jsonschema2ddl.translators.JSONSchemaToDatabase" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">jsonschema2ddl.translators.</code><code class="sig-name descname">JSONSchemaToDatabase</code><span class="sig-paren">(</span><em class="sig-param">schema: Dict</em>, <em class="sig-param">database_flavor: str = 'postgres'</em>, <em class="sig-param">db_schema_name: str = None</em>, <em class="sig-param">abbreviations: Dict = None</em>, <em class="sig-param">extra_columns: List = None</em>, <em class="sig-param">root_table_name: str = 'root'</em>, <em class="sig-param">log_level: str = 'DEBUG'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/jsonschema2ddl/translators.html#JSONSchemaToDatabase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jsonschema2ddl.translators.JSONSchemaToDatabase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>JSONSchemaToDatabase is the mother class for everything.</p>
 <p>Typically you want to instantiate a <cite>JSONSchemaToPostgres</cite> object, and
@@ -668,13 +668,6 @@ Defaults to False.</p></li>
 </div>
 <div class="section" id="module-jsonschema2ddl.types">
 <span id="jsonschema2ddl-types-module"></span><h2>jsonschema2ddl.types module<a class="headerlink" href="#module-jsonschema2ddl.types" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="jsonschema2ddl.types.Type">
-<em class="property">class </em><code class="sig-prename descclassname">jsonschema2ddl.types.</code><code class="sig-name descname">Type</code><a class="reference internal" href="../_modules/jsonschema2ddl/types.html#Type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jsonschema2ddl.types.Type" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.9/library/enum.html#enum.Enum" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
-<p>An enumeration.</p>
-</dd></dl>
-
 </div>
 <div class="section" id="module-jsonschema2ddl.utils">
 <span id="jsonschema2ddl-utils-module"></span><h2>jsonschema2ddl.utils module<a class="headerlink" href="#module-jsonschema2ddl.utils" title="Permalink to this headline">¶</a></h2>
@@ -699,7 +692,7 @@ Defaults to False.</p></li>
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-jsonschema2ddl" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="jsonschema2ddl.JSONSchemaToDatabase">
-<em class="property">class </em><code class="sig-prename descclassname">jsonschema2ddl.</code><code class="sig-name descname">JSONSchemaToDatabase</code><span class="sig-paren">(</span><em class="sig-param">schema: Dict</em>, <em class="sig-param">database_flavor: str = 'postgres'</em>, <em class="sig-param">db_schema_name: str = None</em>, <em class="sig-param">abbreviations: Dict = {}</em>, <em class="sig-param">extra_columns: List = []</em>, <em class="sig-param">root_table_name: str = 'root'</em>, <em class="sig-param">log_level: str = 'DEBUG'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/jsonschema2ddl/translators.html#JSONSchemaToDatabase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jsonschema2ddl.JSONSchemaToDatabase" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">jsonschema2ddl.</code><code class="sig-name descname">JSONSchemaToDatabase</code><span class="sig-paren">(</span><em class="sig-param">schema: Dict</em>, <em class="sig-param">database_flavor: str = 'postgres'</em>, <em class="sig-param">db_schema_name: str = None</em>, <em class="sig-param">abbreviations: Dict = None</em>, <em class="sig-param">extra_columns: List = None</em>, <em class="sig-param">root_table_name: str = 'root'</em>, <em class="sig-param">log_level: str = 'DEBUG'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/jsonschema2ddl/translators.html#JSONSchemaToDatabase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jsonschema2ddl.JSONSchemaToDatabase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>JSONSchemaToDatabase is the mother class for everything.</p>
 <p>Typically you want to instantiate a <cite>JSONSchemaToPostgres</cite> object, and

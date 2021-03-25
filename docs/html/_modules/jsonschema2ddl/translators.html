@@ -160,6 +160,7 @@
 <span class="kn">import</span> <span class="nn">jsonschema</span>
 
 <span class="kn">from</span> <span class="nn">jsonschema2ddl.models</span> <span class="kn">import</span> <span class="n">Column</span><span class="p">,</span> <span class="n">Table</span>
+<span class="kn">from</span> <span class="nn">jsonschema2ddl.types</span> <span class="kn">import</span> <span class="n">COLUMNS_TYPES_PREFERENCE</span>
 <span class="kn">from</span> <span class="nn">jsonschema2ddl.utils</span> <span class="kn">import</span> <span class="n">db_column_name</span><span class="p">,</span> <span class="n">db_table_name</span><span class="p">,</span> <span class="n">get_one_schema</span>
 
 
@@ -188,8 +189,8 @@
             <span class="n">schema</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span>
             <span class="n">database_flavor</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;postgres&quot;</span><span class="p">,</span>
             <span class="n">db_schema_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">abbreviations</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="p">{},</span>  <span class="c1"># TODO: Implement abbreviations</span>
-            <span class="n">extra_columns</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="p">[],</span>  <span class="c1"># TODO: Implement extra columns</span>
+            <span class="n">abbreviations</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># TODO: Implement abbreviations</span>
+            <span class="n">extra_columns</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># TODO: Implement extra columns</span>
             <span class="n">root_table_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;root&#39;</span><span class="p">,</span>
             <span class="n">log_level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;LOG_LEVEL&#39;</span><span class="p">,</span> <span class="s1">&#39;DEBUG&#39;</span><span class="p">)):</span>
 
@@ -204,8 +205,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">database_flavor</span> <span class="o">=</span> <span class="n">database_flavor</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">db_schema_name</span> <span class="o">=</span> <span class="n">db_schema_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">root_table_name</span> <span class="o">=</span> <span class="n">db_table_name</span><span class="p">(</span><span class="n">root_table_name</span><span class="p">,</span> <span class="n">schema_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_schema_name</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">extra_columns</span> <span class="o">=</span> <span class="n">extra_columns</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">abbreviations</span> <span class="o">=</span> <span class="n">abbreviations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extra_columns</span> <span class="o">=</span> <span class="n">extra_columns</span> <span class="ow">or</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">abbreviations</span> <span class="o">=</span> <span class="n">abbreviations</span> <span class="ow">or</span> <span class="nb">dict</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_schema</span><span class="p">()</span>
 
@@ -252,10 +253,13 @@
                 <span class="n">table_definitions</span><span class="p">[</span><span class="n">table</span><span class="o">.</span><span class="n">ref</span><span class="p">]</span> <span class="o">=</span> <span class="n">table</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># NOTE: Create new column for main table</span>
+                <span class="n">schema_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">object_schema</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="s1">&#39;format&#39;</span> <span class="ow">in</span> <span class="n">object_schema</span> <span class="ow">and</span> <span class="n">object_schema</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">COLUMNS_TYPES_PREFERENCE</span><span class="p">:</span>
+                    <span class="n">schema_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">object_schema</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]</span>
                 <span class="n">column</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span>
                     <span class="n">name</span><span class="o">=</span><span class="n">db_column_name</span><span class="p">(</span><span class="n">name</span><span class="p">),</span>
                     <span class="n">database_flavor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">database_flavor</span><span class="p">,</span>
-                    <span class="n">jsonschema_type</span><span class="o">=</span><span class="n">object_schema</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">],</span>
+                    <span class="n">jsonschema_type</span><span class="o">=</span><span class="n">schema_type</span><span class="p">,</span>
                     <span class="n">jsonschema_fields</span><span class="o">=</span><span class="n">object_schema</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">columns_definitions</span><span class="p">[</span><span class="n">ref</span><span class="p">]</span> <span class="o">=</span> <span class="n">column</span>

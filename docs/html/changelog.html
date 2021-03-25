@@ -89,9 +89,21 @@
 <li class="toctree-l1"><a class="reference internal" href="readme.html">Project General Info</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#unreleased">[Unreleased]</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id1">[0.1.0] - 2020-10-26</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">0.2.0 - 2021-03-25</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#added">Added</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">0.1.2 - 2021-03-22</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#changed">Changed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">0.1.1 - 2021-03-17</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Changed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id9">0.1.0 - 2020-10-26</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id11">Changed</a></li>
 </ul>
 </li>
 </ul>
@@ -169,12 +181,41 @@
 <div class="section" id="unreleased">
 <h2>[Unreleased]<a class="headerlink" href="#unreleased" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="id1">
-<h2>[0.1.0] - 2020-10-26<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<p>This is the first release of the jsonschema2ddl repo. This project is a direct fork from the original.</p>
-<p>In this first we don’t include major changes in functionality but there is a good amount of code refactor that will make this project more maintainable.</p>
+<div class="section" id="id2">
+<h2><a class="reference external" href="https://github.com/clarityai-eng/jsonschema2ddl/releases/tag/0.2.0">0.2.0</a> - 2021-03-25<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="added">
 <h3>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Feat: use the <code class="docutils literal notranslate"><span class="pre">format</span></code> parameter in jsonschema to determine date and datetime types.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="id4">
+<h2><a class="reference external" href="https://github.com/clarityai-eng/jsonschema2ddl/releases/tag/0.1.2">0.1.2</a> - 2021-03-22<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="changed">
+<h3>Changed<a class="headerlink" href="#changed" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Feat: preserve order in columns definitions</p></li>
+<li><p>Chore: Update pipelines with dry run option</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="id6">
+<h2><a class="reference external" href="https://github.com/clarityai-eng/jsonschema2ddl/releases/tag/0.1.1">0.1.1</a> - 2021-03-17<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id7">
+<h3>Changed<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Chore: Migrate from travis to github actions</p></li>
+<li><p>Feat: Accept null as column type with lowest priority</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="id9">
+<h2><a class="reference external" href="https://github.com/clarityai-eng/jsonschema2ddl/releases/tag/0.1.0">0.1.0</a> - 2020-10-26<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
+<p>This is the first release of the jsonschema2ddl repo. This project is a direct fork from the original.</p>
+<p>In this first we don’t include major changes in functionality but there is a good amount of code refactor that will make this project more maintainable.</p>
+<div class="section" id="id10">
+<h3>Added<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>feat: Don’t drop the schema when creating the tables by default. A new parameter is introduced to do so.</p></li>
 <li><p>feat: Provide options to select whether to drop the tables if exists and with cascade or not.</p></li>
@@ -182,8 +223,8 @@
 <li><p>feat: Validate jsonschema before launching the migrations</p></li>
 </ul>
 </div>
-<div class="section" id="changed">
-<h3>Changed<a class="headerlink" href="#changed" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id11">
+<h3>Changed<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>feat: Code is organized in a more object oriented model structure for easy extensibility and mantainability.</p></li>
 <li><p>tests: Use testscontainers to be able to tests the postgres inserts</p></li>
