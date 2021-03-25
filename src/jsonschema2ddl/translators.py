@@ -7,6 +7,7 @@ from urllib.request import urlopen
 import jsonschema
 
 from jsonschema2ddl.models import Column, Table
+from jsonschema2ddl.types import COLUMNS_TYPES_PREFERENCE
 from jsonschema2ddl.utils import db_column_name, db_table_name, get_one_schema
 
 
@@ -35,8 +36,8 @@ class JSONSchemaToDatabase:
             schema: Dict,
             database_flavor: str = "postgres",
             db_schema_name: str = None,
-            abbreviations: Dict = {},  # TODO: Implement abbreviations
-            extra_columns: List = [],  # TODO: Implement extra columns
+            abbreviations: Dict = None,  # TODO: Implement abbreviations
+            extra_columns: List = None,  # TODO: Implement extra columns
             root_table_name: str = 'root',
             log_level: str = os.getenv('LOG_LEVEL', 'DEBUG')):
 
@@ -51,8 +52,8 @@ class JSONSchemaToDatabase:
         self.database_flavor = database_flavor
         self.db_schema_name = db_schema_name
         self.root_table_name = db_table_name(root_table_name, schema_name=self.db_schema_name)
-        self.extra_columns = extra_columns
-        self.abbreviations = abbreviations
+        self.extra_columns = extra_columns or list()
+        self.abbreviations = abbreviations or dict()
 
         self._validate_schema()
 
@@ -99,10 +100,13 @@ class JSONSchemaToDatabase:
                 table_definitions[table.ref] = table
             else:
                 # NOTE: Create new column for main table
+                schema_type: str = object_schema['type']
+                if 'format' in object_schema and object_schema['format'] in COLUMNS_TYPES_PREFERENCE:
+                    schema_type: str = object_schema['format']
                 column = Column(
                     name=db_column_name(name),
                     database_flavor=self.database_flavor,
-                    jsonschema_type=object_schema['type'],
+                    jsonschema_type=schema_type,
                     jsonschema_fields=object_schema,
                 )
                 columns_definitions[ref] = column

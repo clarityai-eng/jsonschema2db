@@ -2,7 +2,7 @@ import logging
 from dataclasses import asdict, dataclass, field
 from typing import ClassVar, Dict, List
 
-from jsonschema2ddl.types import COLUMNS_TYPES, FK_TYPES
+from jsonschema2ddl.types import COLUMNS_TYPES, COLUMNS_TYPES_PREFERENCE, FK_TYPES
 from jsonschema2ddl.utils import db_column_name, get_one_schema
 
 
@@ -39,20 +39,15 @@ class Column:
         Returns:
             str: data type of the column.
         """
-        if 'format' in self.jsonschema_fields:
-            # FIXME: catch this case as a more generic type
-            if self.jsonschema_fields['format'] == 'date-time':
-                return 'timestamptz'
-            elif self.jsonschema_fields['format'] == 'date':
-                return 'date'
+        if 'format' in self.jsonschema_fields and self.jsonschema_fields['format'] in COLUMNS_TYPES_PREFERENCE:
+            self.jsonschema_type = self.jsonschema_fields['format']
+
         return COLUMNS_TYPES[self.database_flavor][self.jsonschema_type].format(self.max_lenght)
 
-    # FIXME: Property or simple function?
     @property
     def is_pk(self) -> bool:
         return self.jsonschema_fields.get('pk', False)
 
-    # FIXME: Property or simple function?
     @property
     def is_index(self) -> bool:
         """Returns true if the column is a index.
@@ -62,7 +57,6 @@ class Column:
         """
         return self.jsonschema_fields.get('index', False)
 
-    # FIXME: Property or simple function?
     @property
     def is_unique(self) -> bool:
         """Returns true if the column is a unique.
@@ -84,7 +78,6 @@ class Column:
     def __hash__(self):
         return hash(self.name)
 
-    # FIXME: Avoid overwritting the the repr method
     # NOTE: Overwrite dataclass method to show data_type property
     def __repr__(self):
         return f"Column(name={self.name} data_type={self.data_type})"

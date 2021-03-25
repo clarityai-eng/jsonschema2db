@@ -1,18 +1,12 @@
-from enum import Enum
-
-
-# TODO: Define the types as enum
-class Type(Enum):
-    pass
-
-
 POSTGRES_TYPES = {
     'boolean': 'bool',
     'number': 'float',
     'string': 'varchar({})',
     'enum': 'text',
     'integer': 'bigint',
-    'timestamp': 'timestamptz',
+    'date-time': 'timestamp',
+    'timestamp': 'timestamp',
+    'timestampz': 'timestamptz',
     'date': 'date',
     'link': 'integer',
     'array': 'json',
@@ -48,6 +42,7 @@ COLUMNS_TYPES_PREFERENCE = {
     'number': 5,
     'float': 5,
     'date': 5,
+    'date-time': 6,
     'timestamp': 6,
     'timestamptz': 6,
     'array': 7,
