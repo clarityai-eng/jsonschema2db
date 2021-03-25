@@ -151,7 +151,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for jsonschema2ddl.utils</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">from</span> <span class="nn">change_case</span> <span class="kn">import</span> <span class="n">ChangeCase</span>
 <span class="kn">from</span> <span class="nn">jsonschema</span> <span class="kn">import</span> <span class="n">ValidationError</span>
@@ -176,7 +176,14 @@
     <span class="n">types</span> <span class="o">=</span> <span class="n">object_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;allOf&#39;</span><span class="p">,</span> <span class="n">object_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;anyOf&#39;</span><span class="p">,</span> <span class="n">object_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;oneOf&#39;</span><span class="p">,</span> <span class="p">[])))</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">types</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s2">&quot;Neither &#39;type&#39;, &#39;allOf&#39;, &#39;anyOf&#39;, &#39;oneOf&#39; defined for field. Aborting!&quot;</span><span class="p">)</span>
-    <span class="n">types_with_preference</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">obj</span><span class="p">:</span> <span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">COLUMNS_TYPES_PREFERENCE</span><span class="p">[</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]]),</span> <span class="n">types</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_type_preference</span><span class="p">(</span><span class="n">type_definition</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+        <span class="n">schema_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">type_definition</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;format&#39;</span> <span class="ow">in</span> <span class="n">type_definition</span> <span class="ow">and</span> <span class="n">type_definition</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">COLUMNS_TYPES_PREFERENCE</span><span class="p">:</span>
+            <span class="n">schema_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">type_definition</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">type_definition</span><span class="p">,</span> <span class="n">COLUMNS_TYPES_PREFERENCE</span><span class="p">[</span><span class="n">schema_type</span><span class="p">]</span>
+
+    <span class="n">types_with_preference</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">get_type_preference</span><span class="p">,</span> <span class="n">types</span><span class="p">)</span>
     <span class="n">max_preference_type</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">types_with_preference</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">max_preference_type</span></div>
 </pre></div>

@@ -155,7 +155,7 @@
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
 
-<span class="kn">from</span> <span class="nn">jsonschema2ddl.types</span> <span class="kn">import</span> <span class="n">COLUMNS_TYPES</span><span class="p">,</span> <span class="n">FK_TYPES</span>
+<span class="kn">from</span> <span class="nn">jsonschema2ddl.types</span> <span class="kn">import</span> <span class="n">COLUMNS_TYPES</span><span class="p">,</span> <span class="n">COLUMNS_TYPES_PREFERENCE</span><span class="p">,</span> <span class="n">FK_TYPES</span>
 <span class="kn">from</span> <span class="nn">jsonschema2ddl.utils</span> <span class="kn">import</span> <span class="n">db_column_name</span><span class="p">,</span> <span class="n">get_one_schema</span>
 
 
@@ -192,20 +192,15 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            str: data type of the column.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="s1">&#39;format&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">jsonschema_fields</span><span class="p">:</span>
-            <span class="c1"># FIXME: catch this case as a more generic type</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">jsonschema_fields</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;date-time&#39;</span><span class="p">:</span>
-                <span class="k">return</span> <span class="s1">&#39;timestamptz&#39;</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">jsonschema_fields</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;date&#39;</span><span class="p">:</span>
-                <span class="k">return</span> <span class="s1">&#39;date&#39;</span>
+        <span class="k">if</span> <span class="s1">&#39;format&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">jsonschema_fields</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">jsonschema_fields</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">COLUMNS_TYPES_PREFERENCE</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">jsonschema_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">jsonschema_fields</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]</span>
+
         <span class="k">return</span> <span class="n">COLUMNS_TYPES</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">database_flavor</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">jsonschema_type</span><span class="p">]</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_lenght</span><span class="p">)</span>
 
-    <span class="c1"># FIXME: Property or simple function?</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">is_pk</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">jsonschema_fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;pk&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
-    <span class="c1"># FIXME: Property or simple function?</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">is_index</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Returns true if the column is a index.</span>
@@ -215,7 +210,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">jsonschema_fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
-    <span class="c1"># FIXME: Property or simple function?</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">is_unique</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Returns true if the column is a unique.</span>
@@ -237,7 +231,6 @@
     <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
-    <span class="c1"># FIXME: Avoid overwritting the the repr method</span>
     <span class="c1"># NOTE: Overwrite dataclass method to show data_type property</span>
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Column(name=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> data_type=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_type</span><span class="si">}</span><span class="s2">)&quot;</span></div>
