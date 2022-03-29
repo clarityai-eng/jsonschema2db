@@ -12,8 +12,8 @@ setup:  ## Setup dev environment
 
 .PHONY: lint
 lint:  ## Perform linting and formatting
-	@echo "Formatting with autopep8"
-	@poetry run autopep8 -i -r ./
+	@echo "Formatting with black"
+	@poetry run black .
 	@echo "Check for errors with flake8"
 	@poetry run flake8 ./
 
