@@ -5,15 +5,15 @@ help: ## show help message
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  \033[36m\033[0m\n"} /^[$$()% a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 
-.PHONY: setup
-setup:  ## Setup dev environment
+.PHONY: install
+install:  ## Install project using poetry
 	poetry install
 
 
 .PHONY: lint
 lint:  ## Perform linting and formatting
-	@echo "Formatting with autopep8"
-	@poetry run autopep8 -i -r ./
+	@echo "Formatting with black"
+	@poetry run black .
 	@echo "Check for errors with flake8"
 	@poetry run flake8 ./
 

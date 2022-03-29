@@ -36,7 +36,6 @@ jsonschema2ddl.utils module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 
