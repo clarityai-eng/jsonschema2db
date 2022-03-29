@@ -127,3 +127,4 @@ conn.comit()
 * Support pattern constrints
 * Support redirects when validating the `$schema`
 * Support nested refs in schema
+* Parse array in type for ['string', 'null'] cases
