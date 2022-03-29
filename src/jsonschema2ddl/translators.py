@@ -115,6 +115,7 @@ class JSONSchemaToDatabase:
 
         root_table = Table(
             ref="root",
+            database_flavor=self.database_flavor,
             name=self.root_table_name,
             comment=self.schema.get("comment", ""),
             jsonschema_fields=self.schema,
