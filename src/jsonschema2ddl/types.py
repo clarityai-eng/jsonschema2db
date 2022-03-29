@@ -16,9 +16,9 @@ POSTGRES_TYPES = {
 
 REDSHIFT_TYPES = {
     **POSTGRES_TYPES,
-    'array': 'varchar(1024)',
-    'object': 'varchar(1024)',
-    'id': 'int identity(1, 1) not null',
+    "array": "super",
+    "object": "super",
+    "id": "int identity(1, 1) not null",
 }
 
 COLUMNS_TYPES = {
