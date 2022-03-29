@@ -17,6 +17,7 @@ class Column:
         constraints (Dict): other columns constraints (not implemented).
         jsonschema_fields (Dict): Original fields in the jsonschema.
     """
+
     name: str
     database_flavor: str = "postgres"
     comment: str = field(default_factory=str, repr=False)
@@ -24,11 +25,11 @@ class Column:
     jsonschema_type: str = field(default_factory=str, repr=False)
     jsonschema_fields: Dict = field(default_factory=dict, repr=False)
 
-    logger: ClassVar[logging.Logger] = field(default=logging.getLogger('Column'), repr=False)
+    logger: ClassVar[logging.Logger] = field(default=logging.getLogger("Column"), repr=False)
 
     @property
     def max_lenght(self) -> int:
-        return self.jsonschema_fields.get('maxLength', 256)
+        return self.jsonschema_fields.get("maxLength", 256)
 
     @property
     def data_type(self) -> str:
@@ -39,14 +40,14 @@ class Column:
         Returns:
             str: data type of the column.
         """
-        if 'format' in self.jsonschema_fields and self.jsonschema_fields['format'] in COLUMNS_TYPES_PREFERENCE:
-            self.jsonschema_type = self.jsonschema_fields['format']
+        if "format" in self.jsonschema_fields and self.jsonschema_fields["format"] in COLUMNS_TYPES_PREFERENCE:
+            self.jsonschema_type = self.jsonschema_fields["format"]
 
         return COLUMNS_TYPES[self.database_flavor][self.jsonschema_type].format(self.max_lenght)
 
     @property
     def is_pk(self) -> bool:
-        return self.jsonschema_fields.get('pk', False)
+        return self.jsonschema_fields.get("pk", False)
 
     @property
     def is_index(self) -> bool:
@@ -55,7 +56,7 @@ class Column:
         Returns:
             bool: True if it is index.
         """
-        return self.jsonschema_fields.get('index', False)
+        return self.jsonschema_fields.get("index", False)
 
     @property
     def is_unique(self) -> bool:
@@ -64,7 +65,7 @@ class Column:
         Returns:
             bool: True if it is unique.
         """
-        return self.jsonschema_fields.get('unique', False)
+        return self.jsonschema_fields.get("unique", False)
 
     @staticmethod
     def is_fk() -> bool:
@@ -109,14 +110,15 @@ class Table:
     unique_columns: List[str] = field(default_factory=list)
     jsonschema_fields: Dict = field(default_factory=dict, repr=False)
 
-    logger: ClassVar[logging.Logger] = field(default=logging.getLogger('Table'), repr=False)
+    logger: ClassVar[logging.Logger] = field(default=logging.getLogger("Table"), repr=False)
     _expanded: bool = field(default=False, repr=False)
 
     def expand_columns(
-            self,
-            table_definitions: Dict = dict(),
-            columns_definitions: Dict = dict(),
-            referenced: bool = False):
+        self,
+        table_definitions: Dict = dict(),
+        columns_definitions: Dict = dict(),
+        referenced: bool = False,
+    ):
         """Expand the columns definitions of the
 
         Args:
@@ -130,58 +132,56 @@ class Table:
                 Defaults to False.
         """
         if self._expanded:
-            self.logger.info('Already expanded table. Skiping...')
+            self.logger.info("Already expanded table. Skiping...")
             return self
-        for col_name, col_object in self.jsonschema_fields.get('properties').items():
-            self.logger.debug(f'Creating column {col_name}')
+        for col_name, col_object in self.jsonschema_fields.get("properties").items():
+            self.logger.debug(f"Creating column {col_name}")
             col_name = db_column_name(col_name)
-            self.logger.debug(f'Renamed column to {col_name}')
-            if '$ref' in col_object:
+            self.logger.debug(f"Renamed column to {col_name}")
+            if "$ref" in col_object:
                 self.logger.debug(f"Expanding {col_name} reference {col_object['$ref']}")
                 self.logger.debug(table_definitions)
-                if col_object['$ref'] in table_definitions:
-                    ref = col_object['$ref']
-                    self.logger.debug(f'Column is a FK! Expanding {ref} before continue...')
+                if col_object["$ref"] in table_definitions:
+                    ref = col_object["$ref"]
+                    self.logger.debug(f"Column is a FK! Expanding {ref} before continue...")
                     table_definitions[ref] = table_definitions[ref].expand_columns(
-                        table_definitions=table_definitions,
-                        referenced=True)
+                        table_definitions=table_definitions, referenced=True
+                    )
                     col = FKColumn(
                         table_ref=table_definitions[ref],
                         name=col_name,
                         database_flavor=self.database_flavor,
                     )
-                elif col_object['$ref'] in columns_definitions:
-                    self.logger.debug(
-                        'Column ref a type that is not a object. '
-                        'Copy Column from columns definitions')
-                    ref = col_object['$ref']
+                elif col_object["$ref"] in columns_definitions:
+                    self.logger.debug("Column ref a type that is not a object. " "Copy Column from columns definitions")
+                    ref = col_object["$ref"]
                     ref_col = columns_definitions[ref]
-                    col_as_dict = {**asdict(ref_col), 'name': col_name}
+                    col_as_dict = {**asdict(ref_col), "name": col_name}
                     col = Column(**col_as_dict)
                 else:
-                    self.logger.debug('Skipping ref as it is not in table definitions neither in columns definitions')
+                    self.logger.debug("Skipping ref as it is not in table definitions neither in columns definitions")
                     continue
             else:
-                if 'type' not in col_object:
+                if "type" not in col_object:
                     col_object = get_one_schema(col_object)
                 col = Column(
                     name=col_name,
                     database_flavor=self.database_flavor,
-                    jsonschema_type=col_object['type'],
+                    jsonschema_type=col_object["type"],
                     jsonschema_fields=col_object,
                 )
             self.columns.append(col)
             if col.is_pk:
                 self.primary_key = col
 
-            self.logger.info(f'New created column {col}')
+            self.logger.info(f"New created column {col}")
 
         if referenced and not self.primary_key:
-            self.logger.info('Creating id column for the table in order to reference it as PK')
+            self.logger.info("Creating id column for the table in order to reference it as PK")
             col = Column(
-                name='id',
+                name="id",
                 database_flavor=self.database_flavor,
-                jsonschema_type='id',
+                jsonschema_type="id",
             )
             self.columns.append(col)
             self.primary_key = col
@@ -202,6 +202,7 @@ class FKColumn(Column):
     Attributes:
         table_ref (Table): Pointer to the foreing table object
     """
+
     table_ref: Table = None
 
     @property
@@ -217,7 +218,7 @@ class FKColumn(Column):
         if "varchar" in data_type_ref:
             return data_type_ref
         else:
-            return FK_TYPES.get(data_type_ref, 'bigint')
+            return FK_TYPES.get(data_type_ref, "bigint")
 
     @staticmethod
     def is_fk() -> bool:

@@ -29,21 +29,22 @@ class JSONSchemaToDatabase:
         log_level (str): Log level of the deployment. Default 'DEBUG'.
     """
 
-    logger: logging.Logger = logging.getLogger('JSONSchemaToDatabase')
+    logger: logging.Logger = logging.getLogger("JSONSchemaToDatabase")
 
     def __init__(
-            self,
-            schema: Dict,
-            database_flavor: str = "postgres",
-            db_schema_name: str = None,
-            abbreviations: Dict = None,  # TODO: Implement abbreviations
-            extra_columns: List = None,  # TODO: Implement extra columns
-            root_table_name: str = 'root',
-            log_level: str = os.getenv('LOG_LEVEL', 'DEBUG')):
+        self,
+        schema: Dict,
+        database_flavor: str = "postgres",
+        db_schema_name: str = None,
+        abbreviations: Dict = None,  # TODO: Implement abbreviations
+        extra_columns: List = None,  # TODO: Implement extra columns
+        root_table_name: str = "root",
+        log_level: str = os.getenv("LOG_LEVEL", "DEBUG"),
+    ):
 
         self.logger.setLevel(log_level)
-        Table.logger = self.logger.getChild('Table')
-        Column.logger = self.logger.getChild('Column')
+        Table.logger = self.logger.getChild("Table")
+        Column.logger = self.logger.getChild("Column")
         Table.logger.setLevel(log_level)
         Column.logger.setLevel(log_level)
 
@@ -58,7 +59,7 @@ class JSONSchemaToDatabase:
         self._validate_schema()
 
         self.table_definitions = self._create_table_definitions()
-        self.logger.info('Table definitions initialized')
+        self.logger.info("Table definitions initialized")
 
     def _validate_schema(self):
         """Validates the jsonschema itself against the `$schema` url.
@@ -68,12 +69,12 @@ class JSONSchemaToDatabase:
         Raises:
             jsonschema.ValidationError: Schema is invalid
         """
-        metaschema_uri = self.schema.get('$schema', 'https://json-schema.org/draft-07/schema')
+        metaschema_uri = self.schema.get("$schema", "https://json-schema.org/draft-07/schema")
         metaschema_uri = urlopen(metaschema_uri).url
 
         meta_schema = json.loads(urlopen(metaschema_uri).read())
         jsonschema.validate(instance=self.schema, schema=meta_schema)
-        self.logger.debug('Schema is valid')
+        self.logger.debug("Schema is valid")
 
     def _create_table_definitions(self):
         """Creates the table definitions.
@@ -84,25 +85,26 @@ class JSONSchemaToDatabase:
         # NOTE: create first empty tables to reference later in columns
         table_definitions = dict()
         columns_definitions = dict()
-        schema_definitions = self.schema.get('definitions', {})
+        schema_definitions = self.schema.get("definitions", {})
         for name, object_schema in schema_definitions.items():
             ref = object_schema.get("$id") or f"#/definitions/{name}"
-            if 'type' not in object_schema:
+            if "type" not in object_schema:
                 object_schema = get_one_schema(object_schema)
 
-            if object_schema['type'] == 'object':
+            if object_schema["type"] == "object":
                 table = Table(
                     ref=ref,
+                    database_flavor=self.database_flavor,
                     name=db_table_name(name, schema_name=self.db_schema_name),
-                    comment=object_schema.get('comment'),
+                    comment=object_schema.get("comment"),
                     jsonschema_fields=object_schema,
                 )
                 table_definitions[table.ref] = table
             else:
                 # NOTE: Create new column for main table
-                schema_type: str = object_schema['type']
-                if 'format' in object_schema and object_schema['format'] in COLUMNS_TYPES_PREFERENCE:
-                    schema_type: str = object_schema['format']
+                schema_type: str = object_schema["type"]
+                if "format" in object_schema and object_schema["format"] in COLUMNS_TYPES_PREFERENCE:
+                    schema_type: str = object_schema["format"]
                 column = Column(
                     name=db_column_name(name),
                     database_flavor=self.database_flavor,
@@ -112,9 +114,9 @@ class JSONSchemaToDatabase:
                 columns_definitions[ref] = column
 
         root_table = Table(
-            ref='root',
+            ref="root",
             name=self.root_table_name,
-            comment=self.schema.get('comment', ""),
+            comment=self.schema.get("comment", ""),
             jsonschema_fields=self.schema,
         )
         table_definitions[root_table.ref] = root_table
@@ -138,12 +140,13 @@ class JSONSchemaToDatabase:
         cursor.execute(query, args)
 
     def create_tables(
-            self,
-            conn,
-            drop_schema: bool = False,
-            drop_tables: bool = False,
-            drop_cascade: bool = True,
-            auto_commit: bool = False):
+        self,
+        conn,
+        drop_schema: bool = False,
+        drop_tables: bool = False,
+        drop_cascade: bool = True,
+        auto_commit: bool = False,
+    ):
         """Create the tables for the schema
 
         Args:
@@ -156,27 +159,27 @@ class JSONSchemaToDatabase:
             auto_commit (bool, optional): autocomit after finishing. Defaults to False.
         """
         with conn.cursor() as cursor:
-            self.logger.info(f'Creating tables in the schema {self.db_schema_name}')
+            self.logger.info(f"Creating tables in the schema {self.db_schema_name}")
             if self.db_schema_name is not None:
                 if drop_schema:
-                    self.logger.info(f'Dropping schema {self.db_schema_name}!!')
+                    self.logger.info(f"Dropping schema {self.db_schema_name}!!")
                     self._execute(
                         cursor,
-                        f'DROP SCHEMA IF EXISTS {self.db_schema_name} {"CASCADE;" if drop_cascade else ";"}'
+                        f'DROP SCHEMA IF EXISTS {self.db_schema_name} {"CASCADE;" if drop_cascade else ";"}',
                     )
-                self._execute(cursor, f'CREATE SCHEMA IF NOT EXISTS {self.db_schema_name};')
+                self._execute(cursor, f"CREATE SCHEMA IF NOT EXISTS {self.db_schema_name};")
 
             self.logger.debug(self.table_definitions.keys())
             for table_ref, table in self.table_definitions.items():
                 # FIXME: Move to a separate method
-                self.logger.info(f'Trying to create table {table.name}')
+                self.logger.info(f"Trying to create table {table.name}")
                 self.logger.debug(table_ref)
                 self.logger.debug(table)
                 if drop_tables:
-                    self.logger.info(f'Dropping table {table.name}!!')
+                    self.logger.info(f"Dropping table {table.name}!!")
                     self._execute(
                         cursor,
-                        f'DROP TABLE IF EXISTS {table.name} {"CASCADE;" if drop_cascade else ";"}'
+                        f'DROP TABLE IF EXISTS {table.name} {"CASCADE;" if drop_cascade else ";"}',
                     )
                 all_cols = [f' "{col.name}" {col.data_type}' for col in table.columns]
                 unique_cols = [f'"{col}"' for col in table.columns if col.is_unique]
@@ -188,13 +191,16 @@ class JSONSchemaToDatabase:
                 )
                 self._execute(cursor, create_q)
                 if table.comment:
-                    self.logger.debug(f'Set the following comment on table {table.name}: {table.comment}')
+                    self.logger.debug(f"Set the following comment on table {table.name}: {table.comment}")
                     self._execute(cursor, f"COMMENT ON TABLE {table.name} IS '{table.comment}'")
                 for col in table.columns:
                     if col.comment:
-                        self.logger.debug(f'Set the following comment on column {col.name}: {col.comment}')
-                        self._execute(cursor, f'COMMENT ON COLUMN {table.name}."{col.name}" IS ' + f"'{col.comment}'")
-                self.logger.info('Table created!')
+                        self.logger.debug(f"Set the following comment on column {col.name}: {col.comment}")
+                        self._execute(
+                            cursor,
+                            f'COMMENT ON COLUMN {table.name}."{col.name}" IS ' + f"'{col.comment}'",
+                        )
+                self.logger.info("Table created!")
 
         if auto_commit:
             conn.commit()
@@ -229,18 +235,18 @@ class JSONSchemaToDatabase:
         Args:
             conn (psocopg2.connection): connection object.
         """
-        self.logger.info('Analyzing tables...')
+        self.logger.info("Analyzing tables...")
         with conn.cursor() as cursor:
             for table_ref, table in self.table_definitions.items():
-                self.logger.info(f'Launch analyze for {table.name}')
-                self._execute(cursor, 'ANALYZE %s' % table.name)
+                self.logger.info(f"Launch analyze for {table.name}")
+                self._execute(cursor, "ANALYZE %s" % table.name)
 
 
 class JSONSchemaToPostgres(JSONSchemaToDatabase):
     """Shorthand for JSONSchemaToDatabase(..., database_flavor='postgres')"""
 
     def __init__(self, *args, **kwargs):
-        kwargs['database_flavor'] = 'postgres'
+        kwargs["database_flavor"] = "postgres"
         super(JSONSchemaToPostgres, self).__init__(*args, **kwargs)
 
 
@@ -248,5 +254,5 @@ class JSONSchemaToRedshift(JSONSchemaToDatabase):
     """Shorthand for JSONSchemaToDatabase(..., database_flavor='redshift')"""
 
     def __init__(self, *args, **kwargs):
-        kwargs['database_flavor'] = 'redshift'
+        kwargs["database_flavor"] = "redshift"
         super(JSONSchemaToRedshift, self).__init__(*args, **kwargs)
