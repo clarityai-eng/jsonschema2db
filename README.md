@@ -1,10 +1,10 @@
 # JSON Schema ➣ DDL
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/clarityai-eng/jsonschema2ddl?logo=hey)
-![Build Workflow Status](https://img.shields.io/github/workflow/status/clarityai-eng/jsonschema2ddl/build)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/clarityai-eng/jsonschema2ddl/build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/clarityai-eng/jsonschema2ddl/blob/master/LICENSE)
 
-> This repository is a fork. Check out the original project [here](https://github.com/better/jsonschema2ddl)
+> This repository is a fork. Check out the original project [here](https://github.com/better/jsonschema2db)
 
 Create your DDL statements for your database based on your [JSON Schema](http://json-schema.org/).
 
