@@ -70,9 +70,9 @@ class JSONSchemaToDatabase:
             jsonschema.ValidationError: Schema is invalid
         """
         metaschema_uri = self.schema.get("$schema", "https://json-schema.org/draft-07/schema")
-        metaschema_uri = urlopen(metaschema_uri).url
+        r = Request(metaschema_uri, headers={'User-Agent': 'Mozilla/5.0'})
 
-        meta_schema = json.loads(urlopen(metaschema_uri).read())
+        meta_schema = json.loads(urlopen(r).read())
         jsonschema.validate(instance=self.schema, schema=meta_schema)
         self.logger.debug("Schema is valid")
 
